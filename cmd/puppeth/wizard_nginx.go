@@ -19,7 +19,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/scroll-tech/go-ethereum/log"
+	"github.com/tenderly/net-scroll-geth/log"
 )
 
 // ensureVirtualHost checks whether a reverse-proxy is running on the specified

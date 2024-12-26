@@ -23,7 +23,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/scroll-tech/go-ethereum/p2p/simulations/pipes"
+	"github.com/tenderly/net-scroll-geth/p2p/simulations/pipes"
 )
 
 func TestTCPPipe(t *testing.T) {

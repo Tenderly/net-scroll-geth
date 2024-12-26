@@ -10,9 +10,9 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/crypto/kzg4844"
-	"github.com/scroll-tech/go-ethereum/rollup/rollup_sync_service"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/crypto/kzg4844"
+	"github.com/tenderly/net-scroll-geth/rollup/rollup_sync_service"
 )
 
 type BeaconNodeClient struct {

@@ -25,8 +25,8 @@ import (
 
 	"github.com/mattn/go-colorable"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/log"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/log"
 )
 
 func TestEncryption(t *testing.T) {

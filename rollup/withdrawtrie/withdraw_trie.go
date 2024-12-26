@@ -1,8 +1,8 @@
 package withdrawtrie
 
 import (
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/rollup/rcfg"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/rollup/rcfg"
 )
 
 // StateDB represents the StateDB interface

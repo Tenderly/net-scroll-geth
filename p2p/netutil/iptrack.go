@@ -19,7 +19,7 @@ package netutil
 import (
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/common/mclock"
+	"github.com/tenderly/net-scroll-geth/common/mclock"
 )
 
 // IPTracker predicts the external endpoint, i.e. IP address and port, of the local host

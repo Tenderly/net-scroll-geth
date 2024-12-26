@@ -1,7 +1,7 @@
 package vm
 
 import (
-	"github.com/scroll-tech/go-ethereum/common"
+	"github.com/tenderly/net-scroll-geth/common"
 )
 
 type traceFunc func(l *StructLogger, scope *ScopeContext) error

@@ -19,10 +19,10 @@ package ethtest
 import (
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/eth/protocols/eth"
-	"github.com/scroll-tech/go-ethereum/internal/utesting"
-	"github.com/scroll-tech/go-ethereum/p2p/enode"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/eth/protocols/eth"
+	"github.com/tenderly/net-scroll-geth/internal/utesting"
+	"github.com/tenderly/net-scroll-geth/p2p/enode"
 )
 
 // Suite represents a structure used to test a node's conformance

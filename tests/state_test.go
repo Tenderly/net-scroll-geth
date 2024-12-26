@@ -23,7 +23,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/scroll-tech/go-ethereum/core/vm"
+	"github.com/tenderly/net-scroll-geth/core/vm"
 )
 
 func TestState(t *testing.T) {

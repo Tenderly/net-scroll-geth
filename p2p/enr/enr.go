@@ -40,7 +40,7 @@ import (
 	"io"
 	"sort"
 
-	"github.com/scroll-tech/go-ethereum/rlp"
+	"github.com/tenderly/net-scroll-geth/rlp"
 )
 
 const SizeLimit = 300 // maximum encoded size of a node record in bytes

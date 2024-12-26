@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/common"
+	"github.com/tenderly/net-scroll-geth/common"
 )
 
 // precompiledTest defines the input/output pairs for precompiled contract tests.

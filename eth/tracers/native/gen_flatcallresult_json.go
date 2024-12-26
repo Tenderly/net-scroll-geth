@@ -5,8 +5,8 @@ package native
 import (
 	"encoding/json"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/common/hexutil"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/common/hexutil"
 )
 
 var _ = (*flatCallResultMarshaling)(nil)

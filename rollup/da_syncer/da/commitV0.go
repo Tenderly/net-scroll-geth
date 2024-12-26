@@ -6,10 +6,10 @@ import (
 
 	"github.com/scroll-tech/da-codec/encoding"
 
-	"github.com/scroll-tech/go-ethereum/core/rawdb"
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/ethdb"
-	"github.com/scroll-tech/go-ethereum/rollup/da_syncer/serrors"
+	"github.com/tenderly/net-scroll-geth/core/rawdb"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/ethdb"
+	"github.com/tenderly/net-scroll-geth/rollup/da_syncer/serrors"
 )
 
 type CommitBatchDAV0 struct {

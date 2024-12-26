@@ -7,13 +7,13 @@ import (
 
 	"github.com/scroll-tech/da-codec/encoding"
 
-	"github.com/scroll-tech/go-ethereum/rollup/da_syncer/blob_client"
-	"github.com/scroll-tech/go-ethereum/rollup/rollup_sync_service"
+	"github.com/tenderly/net-scroll-geth/rollup/da_syncer/blob_client"
+	"github.com/tenderly/net-scroll-geth/rollup/rollup_sync_service"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/crypto/kzg4844"
-	"github.com/scroll-tech/go-ethereum/ethdb"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/crypto/kzg4844"
+	"github.com/tenderly/net-scroll-geth/ethdb"
 )
 
 type CommitBatchDAV1 struct {
