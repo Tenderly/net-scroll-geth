@@ -22,8 +22,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/common/mclock"
-	"github.com/scroll-tech/go-ethereum/common/prque"
+	"github.com/tenderly/net-scroll-geth/common/mclock"
+	"github.com/tenderly/net-scroll-geth/common/prque"
 )
 
 // cmNodeFields are ClientNode fields used by the client manager

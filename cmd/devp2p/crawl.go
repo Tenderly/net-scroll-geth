@@ -19,8 +19,8 @@ package main
 import (
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/log"
-	"github.com/scroll-tech/go-ethereum/p2p/enode"
+	"github.com/tenderly/net-scroll-geth/log"
+	"github.com/tenderly/net-scroll-geth/p2p/enode"
 )
 
 type crawler struct {

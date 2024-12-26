@@ -21,9 +21,9 @@ import (
 
 	"gopkg.in/urfave/cli.v1"
 
-	"github.com/scroll-tech/go-ethereum/cmd/devp2p/internal/v4test"
-	"github.com/scroll-tech/go-ethereum/internal/utesting"
-	"github.com/scroll-tech/go-ethereum/log"
+	"github.com/tenderly/net-scroll-geth/cmd/devp2p/internal/v4test"
+	"github.com/tenderly/net-scroll-geth/internal/utesting"
+	"github.com/tenderly/net-scroll-geth/log"
 )
 
 var (

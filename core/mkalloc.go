@@ -35,8 +35,8 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/scroll-tech/go-ethereum/core"
-	"github.com/scroll-tech/go-ethereum/rlp"
+	"github.com/tenderly/net-scroll-geth/core"
+	"github.com/tenderly/net-scroll-geth/rlp"
 )
 
 type storageItem struct{ Key, Value *big.Int }

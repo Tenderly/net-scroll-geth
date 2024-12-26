@@ -25,7 +25,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/scroll-tech/go-ethereum/log"
+	"github.com/tenderly/net-scroll-geth/log"
 )
 
 // ethstatsDockerfile is the Dockerfile required to build an ethstats backend

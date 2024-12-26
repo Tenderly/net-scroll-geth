@@ -23,8 +23,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/crypto"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/crypto"
 )
 
 // The ABI holds information about a contract's context and available

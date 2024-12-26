@@ -22,10 +22,10 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/eth/protocols/eth"
-	"github.com/scroll-tech/go-ethereum/eth/protocols/snap"
-	"github.com/scroll-tech/go-ethereum/p2p"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/eth/protocols/eth"
+	"github.com/tenderly/net-scroll-geth/eth/protocols/snap"
+	"github.com/tenderly/net-scroll-geth/p2p"
 )
 
 var (
