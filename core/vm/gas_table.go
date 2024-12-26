@@ -19,9 +19,9 @@ package vm
 import (
 	"errors"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/common/math"
-	"github.com/scroll-tech/go-ethereum/params"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/common/math"
+	"github.com/tenderly/net-scroll-geth/params"
 )
 
 // memoryGasCost calculates the quadratic gas for memory expansion. It does so

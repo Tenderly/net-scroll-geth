@@ -20,7 +20,7 @@ package utils
 import (
 	"fmt"
 
-	"github.com/scroll-tech/go-ethereum/console/prompt"
+	"github.com/tenderly/net-scroll-geth/console/prompt"
 )
 
 // GetPassPhrase displays the given text(prompt) to the user and requests some textual

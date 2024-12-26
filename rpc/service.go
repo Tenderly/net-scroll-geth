@@ -26,7 +26,7 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/scroll-tech/go-ethereum/log"
+	"github.com/tenderly/net-scroll-geth/log"
 )
 
 var (

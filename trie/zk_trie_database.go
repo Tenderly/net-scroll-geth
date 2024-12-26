@@ -7,8 +7,8 @@ import (
 
 	zktrie "github.com/scroll-tech/zktrie/trie"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/ethdb"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/ethdb"
 )
 
 // ZktrieDatabase Database adaptor implements zktrie.ZktrieDatbase

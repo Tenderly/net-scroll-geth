@@ -28,7 +28,7 @@ import (
 
 	"gopkg.in/urfave/cli.v1"
 
-	"github.com/scroll-tech/go-ethereum/common/math"
+	"github.com/tenderly/net-scroll-geth/common/math"
 )
 
 // Custom type which is registered in the flags library which cli uses for

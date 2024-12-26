@@ -3,8 +3,8 @@ package rawdb
 import (
 	"math/big"
 
-	"github.com/scroll-tech/go-ethereum/ethdb"
-	"github.com/scroll-tech/go-ethereum/log"
+	"github.com/tenderly/net-scroll-geth/ethdb"
+	"github.com/tenderly/net-scroll-geth/log"
 )
 
 // WriteDASyncedL1BlockNumber writes the highest synced L1 block number to the database.

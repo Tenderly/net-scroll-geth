@@ -17,8 +17,8 @@
 package runtime
 
 import (
-	"github.com/scroll-tech/go-ethereum/core"
-	"github.com/scroll-tech/go-ethereum/core/vm"
+	"github.com/tenderly/net-scroll-geth/core"
+	"github.com/tenderly/net-scroll-geth/core/vm"
 )
 
 func NewEnv(cfg *Config) *vm.EVM {

@@ -22,7 +22,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/scroll-tech/go-ethereum/common"
+	"github.com/tenderly/net-scroll-geth/common"
 )
 
 func TestInterfaceGetSet(t *testing.T) {

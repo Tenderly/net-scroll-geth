@@ -23,8 +23,8 @@ import (
 
 	"gopkg.in/urfave/cli.v1"
 
-	"github.com/scroll-tech/go-ethereum/accounts/keystore"
-	"github.com/scroll-tech/go-ethereum/cmd/utils"
+	"github.com/tenderly/net-scroll-geth/accounts/keystore"
+	"github.com/tenderly/net-scroll-geth/cmd/utils"
 )
 
 var newPassphraseFlag = cli.StringFlag{

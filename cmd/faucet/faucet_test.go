@@ -19,7 +19,7 @@ package main
 import (
 	"testing"
 
-	"github.com/scroll-tech/go-ethereum/common"
+	"github.com/tenderly/net-scroll-geth/common"
 )
 
 func TestFacebook(t *testing.T) {

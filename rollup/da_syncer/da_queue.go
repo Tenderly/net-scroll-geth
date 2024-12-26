@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/scroll-tech/go-ethereum/rollup/da_syncer/da"
-	"github.com/scroll-tech/go-ethereum/rollup/da_syncer/serrors"
+	"github.com/tenderly/net-scroll-geth/rollup/da_syncer/da"
+	"github.com/tenderly/net-scroll-geth/rollup/da_syncer/serrors"
 )
 
 // DAQueue is a pipeline stage that reads DA entries from a DataSource and provides them to the next stage.

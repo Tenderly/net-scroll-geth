@@ -3,7 +3,7 @@ package da
 import (
 	"math/big"
 
-	"github.com/scroll-tech/go-ethereum/core/types"
+	"github.com/tenderly/net-scroll-geth/core/types"
 )
 
 type Type int

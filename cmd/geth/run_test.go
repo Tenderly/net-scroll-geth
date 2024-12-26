@@ -26,8 +26,8 @@ import (
 
 	"github.com/docker/docker/pkg/reexec"
 
-	"github.com/scroll-tech/go-ethereum/internal/cmdtest"
-	"github.com/scroll-tech/go-ethereum/rpc"
+	"github.com/tenderly/net-scroll-geth/internal/cmdtest"
+	"github.com/tenderly/net-scroll-geth/rpc"
 )
 
 func tmpdir(t *testing.T) string {

@@ -23,8 +23,8 @@ import (
 
 	"golang.org/x/crypto/sha3"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/rollup/rcfg"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/rollup/rcfg"
 )
 
 // Genesis hashes to enforce below configs on.
