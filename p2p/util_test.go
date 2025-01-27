@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/common/mclock"
+	"github.com/tenderly/net-scroll-geth/common/mclock"
 )
 
 func TestExpHeap(t *testing.T) {

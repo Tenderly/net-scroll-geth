@@ -25,7 +25,7 @@ import (
 
 	mapset "github.com/deckarep/golang-set"
 
-	"github.com/scroll-tech/go-ethereum/log"
+	"github.com/tenderly/net-scroll-geth/log"
 )
 
 const MetadataApi = "rpc"

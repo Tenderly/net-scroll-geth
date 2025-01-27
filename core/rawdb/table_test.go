@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/scroll-tech/go-ethereum/ethdb"
+	"github.com/tenderly/net-scroll-geth/ethdb"
 )
 
 func TestTableDatabase(t *testing.T)            { testTableDatabase(t, "prefix") }

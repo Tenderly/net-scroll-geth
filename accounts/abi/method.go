@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/scroll-tech/go-ethereum/crypto"
+	"github.com/tenderly/net-scroll-geth/crypto"
 )
 
 // FunctionType represents different types of functions a contract might have.

@@ -22,14 +22,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/scroll-tech/go-ethereum/accounts"
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/common/hexutil"
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/internal/ethapi"
-	"github.com/scroll-tech/go-ethereum/signer/core"
-	"github.com/scroll-tech/go-ethereum/signer/core/apitypes"
-	"github.com/scroll-tech/go-ethereum/signer/storage"
+	"github.com/tenderly/net-scroll-geth/accounts"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/common/hexutil"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/internal/ethapi"
+	"github.com/tenderly/net-scroll-geth/signer/core"
+	"github.com/tenderly/net-scroll-geth/signer/core/apitypes"
+	"github.com/tenderly/net-scroll-geth/signer/storage"
 )
 
 const JS = `

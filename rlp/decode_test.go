@@ -27,7 +27,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/scroll-tech/go-ethereum/common/math"
+	"github.com/tenderly/net-scroll-geth/common/math"
 )
 
 func TestStreamKind(t *testing.T) {

@@ -3,12 +3,12 @@ package da_syncer
 import (
 	"context"
 
-	"github.com/scroll-tech/go-ethereum/core"
-	"github.com/scroll-tech/go-ethereum/ethdb"
-	"github.com/scroll-tech/go-ethereum/params"
-	"github.com/scroll-tech/go-ethereum/rollup/da_syncer/blob_client"
-	"github.com/scroll-tech/go-ethereum/rollup/da_syncer/da"
-	"github.com/scroll-tech/go-ethereum/rollup/rollup_sync_service"
+	"github.com/tenderly/net-scroll-geth/core"
+	"github.com/tenderly/net-scroll-geth/ethdb"
+	"github.com/tenderly/net-scroll-geth/params"
+	"github.com/tenderly/net-scroll-geth/rollup/da_syncer/blob_client"
+	"github.com/tenderly/net-scroll-geth/rollup/da_syncer/da"
+	"github.com/tenderly/net-scroll-geth/rollup/rollup_sync_service"
 )
 
 type DataSource interface {

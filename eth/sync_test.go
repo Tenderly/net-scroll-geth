@@ -21,9 +21,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/eth/protocols/eth"
-	"github.com/scroll-tech/go-ethereum/p2p"
-	"github.com/scroll-tech/go-ethereum/p2p/enode"
+	"github.com/tenderly/net-scroll-geth/eth/protocols/eth"
+	"github.com/tenderly/net-scroll-geth/p2p"
+	"github.com/tenderly/net-scroll-geth/p2p/enode"
 )
 
 // Tests that fast sync is disabled after a successful sync cycle.

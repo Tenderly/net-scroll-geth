@@ -23,8 +23,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/scroll-tech/go-ethereum/eth/protocols/eth"
-	"github.com/scroll-tech/go-ethereum/p2p"
+	"github.com/tenderly/net-scroll-geth/eth/protocols/eth"
+	"github.com/tenderly/net-scroll-geth/p2p"
 )
 
 // TestEthProtocolNegotiation tests whether the test suite

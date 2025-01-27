@@ -19,8 +19,8 @@ package client
 import (
 	"io"
 
-	"github.com/scroll-tech/go-ethereum/les/utils"
-	"github.com/scroll-tech/go-ethereum/rlp"
+	"github.com/tenderly/net-scroll-geth/les/utils"
+	"github.com/tenderly/net-scroll-geth/rlp"
 )
 
 const basketFactor = 1000000 // reference basket amount and value scale factor

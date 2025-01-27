@@ -73,7 +73,7 @@ jobs:
       run: go install golang.org/x/tools/cmd/goimports@v0.24.0
     - name: Checkout code
       uses: actions/checkout@v2
-    - run: goimports -local github.com/scroll-tech/go-ethereum/ -w .
+    - run: goimports -local github.com/tenderly/net-scroll-geth/ -w .
     # If there are any diffs from goimports, fail.
     - name: Verify no changes from goimports
       run: |

@@ -22,8 +22,8 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/scroll-tech/go-ethereum/log"
-	"github.com/scroll-tech/go-ethereum/metrics"
+	"github.com/tenderly/net-scroll-geth/log"
+	"github.com/tenderly/net-scroll-geth/metrics"
 )
 
 // Handler returns an HTTP handler which dump metrics in Prometheus format.
