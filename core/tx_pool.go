@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"slices"
 	"sort"
 	"sync"
 	"sync/atomic"
@@ -32,6 +33,7 @@ import (
 	"github.com/scroll-tech/go-ethereum/core/rawdb"
 	"github.com/scroll-tech/go-ethereum/core/state"
 	"github.com/scroll-tech/go-ethereum/core/types"
+	"github.com/scroll-tech/go-ethereum/crypto/codehash"
 	"github.com/scroll-tech/go-ethereum/ethdb"
 	"github.com/scroll-tech/go-ethereum/event"
 	"github.com/scroll-tech/go-ethereum/log"
@@ -89,6 +91,15 @@ var (
 	// than some meaningful limit a user might use. This is not a consensus error
 	// making the transaction invalid, rather a DOS protection.
 	ErrOversizedData = errors.New("oversized data")
+
+	// ErrInflightTxLimitReached is returned when the maximum number of in-flight
+	// transactions is reached for specific accounts.
+	ErrInflightTxLimitReached = errors.New("in-flight transaction limit reached for delegated accounts")
+
+	// ErrAuthorityReserved is returned if a transaction has an authorization
+	// signed by an address which already has in-flight transactions known to the
+	// pool.
+	ErrAuthorityReserved = errors.New("authority already reserved")
 )
 
 var (
@@ -104,6 +115,7 @@ var (
 	pendingReplaceMeter   = metrics.NewRegisteredMeter("txpool/pending/replace", nil)
 	pendingRateLimitMeter = metrics.NewRegisteredMeter("txpool/pending/ratelimit", nil) // Dropped due to rate limiting
 	pendingNofundsMeter   = metrics.NewRegisteredMeter("txpool/pending/nofunds", nil)   // Dropped due to out-of-funds
+	pendingEvictionMeter  = metrics.NewRegisteredMeter("txpool/pending/eviction", nil)  // Dropped due to lifetime
 
 	// Metrics for the queued pool
 	queuedDiscardMeter   = metrics.NewRegisteredMeter("txpool/queued/discard", nil)
@@ -178,6 +190,8 @@ type TxPoolConfig struct {
 	AccountQueue uint64 // Maximum number of non-executable transaction slots permitted per account
 	GlobalQueue  uint64 // Maximum number of non-executable transaction slots for all accounts
 
+	AccountPendingLimit uint64 // Number of executable transactions allowed per account
+
 	Lifetime time.Duration // Maximum amount of time non-executable transaction are queued
 }
 
@@ -194,6 +208,8 @@ var DefaultTxPoolConfig = TxPoolConfig{
 	GlobalSlots:  4096 + 1024, // urgent + floating queue capacity with 4:1 ratio
 	AccountQueue: 64,
 	GlobalQueue:  1024,
+
+	AccountPendingLimit: 1024,
 
 	Lifetime: 3 * time.Hour,
 }
@@ -230,6 +246,10 @@ func (config *TxPoolConfig) sanitize() TxPoolConfig {
 		log.Warn("Sanitizing invalid txpool global queue", "provided", conf.GlobalQueue, "updated", DefaultTxPoolConfig.GlobalQueue)
 		conf.GlobalQueue = DefaultTxPoolConfig.GlobalQueue
 	}
+	if conf.AccountPendingLimit < 1 {
+		log.Warn("Sanitizing invalid txpool account pending limit", "provided", conf.AccountPendingLimit, "updated", DefaultTxPoolConfig.AccountPendingLimit)
+		conf.AccountPendingLimit = DefaultTxPoolConfig.AccountPendingLimit
+	}
 	if conf.Lifetime < 1 {
 		log.Warn("Sanitizing invalid txpool lifetime", "provided", conf.Lifetime, "updated", DefaultTxPoolConfig.Lifetime)
 		conf.Lifetime = DefaultTxPoolConfig.Lifetime
@@ -244,6 +264,20 @@ func (config *TxPoolConfig) sanitize() TxPoolConfig {
 // The pool separates processable transactions (which can be applied to the
 // current state) and future transactions. Transactions move between those
 // two states over time as they are received and processed.
+//
+// In addition to tracking transactions, the pool also tracks a set of pending SetCode
+// authorizations (EIP7702). This helps minimize number of transactions that can be
+// trivially churned in the pool. As a standard rule, any account with a deployed
+// delegation or an in-flight authorization to deploy a delegation will only be allowed a
+// single transaction slot instead of the standard number. This is due to the possibility
+// of the account being sweeped by an unrelated account.
+//
+// Because SetCode transactions can have many authorizations included, we avoid explicitly
+// checking their validity to save the state lookup. So long as the encompassing
+// transaction is valid, the authorization will be accepted and tracked by the pool. In
+// case the pool is tracking a pending / queued transaction from a specific account, it
+// will reject new transactions with delegations from that account with standard in-flight
+// transactions.
 type TxPool struct {
 	config      TxPoolConfig
 	chainconfig *params.ChainConfig
@@ -258,6 +292,7 @@ type TxPool struct {
 	eip2718  bool // Fork indicator whether we are using EIP-2718 type transactions.
 	eip1559  bool // Fork indicator whether we are using EIP-1559 type transactions.
 	shanghai bool // Fork indicator whether we are in the Shanghai stage.
+	eip7702  bool // Fork indicator whether we are using EIP-7702 type transactions.
 
 	currentState  *state.StateDB // Current state in the blockchain head
 	currentHead   *big.Int       // Current blockchain head
@@ -422,6 +457,7 @@ func (pool *TxPool) loop() {
 		// Handle inactive account transaction eviction
 		case <-evict.C:
 			pool.mu.Lock()
+			// Evict queued transactions
 			for addr := range pool.queue {
 				// Skip local transactions from the eviction mechanism
 				if pool.locals.contains(addr) {
@@ -431,10 +467,26 @@ func (pool *TxPool) loop() {
 				if time.Since(pool.beats[addr]) > pool.config.Lifetime {
 					list := pool.queue[addr].Flatten()
 					for _, tx := range list {
-						log.Trace("Evicting transaction due to timeout", "account", addr.Hex(), "hash", tx.Hash().Hex(), "lifetime sec", time.Since(pool.beats[addr]).Seconds(), "lifetime limit sec", pool.config.Lifetime.Seconds())
+						log.Trace("Evicting queued transaction due to timeout", "account", addr.Hex(), "hash", tx.Hash().Hex(), "lifetime sec", time.Since(pool.beats[addr]).Seconds(), "lifetime limit sec", pool.config.Lifetime.Seconds())
 						pool.removeTx(tx.Hash(), true)
 					}
 					queuedEvictionMeter.Mark(int64(len(list)))
+				}
+			}
+			// Evict pending transactions
+			for addr := range pool.pending {
+				// Skip local transactions from the eviction mechanism
+				if pool.locals.contains(addr) {
+					continue
+				}
+				// Any non-locals old enough should be removed
+				if time.Since(pool.beats[addr]) > pool.config.Lifetime {
+					list := pool.pending[addr].Flatten()
+					for _, tx := range list {
+						log.Trace("Evicting pending transaction due to timeout", "account", addr.Hex(), "hash", tx.Hash().Hex(), "lifetime sec", time.Since(pool.beats[addr]).Seconds(), "lifetime limit sec", pool.config.Lifetime.Seconds())
+						pool.removeTx(tx.Hash(), true)
+					}
+					pendingEvictionMeter.Mark(int64(len(list)))
 				}
 			}
 			pool.mu.Unlock()
@@ -702,6 +754,10 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	if !pool.eip1559 && tx.Type() == types.DynamicFeeTxType {
 		return ErrTxTypeNotSupported
 	}
+	// Reject set code transactions until EIP-7702 activates.
+	if !pool.eip7702 && tx.Type() == types.SetCodeTxType {
+		return ErrTxTypeNotSupported
+	}
 	// Reject transactions over defined size to prevent DOS attacks
 	if uint64(tx.Size()) > txMaxSize {
 		return ErrOversizedData
@@ -753,6 +809,14 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	if pool.currentState.GetBalance(from).Cmp(tx.Cost()) < 0 {
 		return ErrInsufficientFunds
 	}
+	if err := pool.validateAuth(from, tx); err != nil {
+		return err
+	}
+	if tx.Type() == types.SetCodeTxType {
+		if len(tx.SetCodeAuthorizations()) == 0 {
+			return fmt.Errorf("set code tx must have at least one authorization tuple")
+		}
+	}
 	// 2. If FeeVault is enabled, perform an additional check for L1 data fees.
 	if pool.chainconfig.Scroll.FeeVaultEnabled() {
 		// Get L1 data fee in current state
@@ -767,7 +831,7 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 		}
 	}
 	// Ensure the transaction has more gas than the basic tx fee.
-	intrGas, err := IntrinsicGas(tx.Data(), tx.AccessList(), tx.To() == nil, true, pool.istanbul, pool.shanghai)
+	intrGas, err := IntrinsicGas(tx.Data(), tx.AccessList(), tx.SetCodeAuthorizations(), tx.To() == nil, true, pool.istanbul, pool.shanghai)
 	if err != nil {
 		return err
 	}
@@ -956,6 +1020,15 @@ func (pool *TxPool) promoteTx(addr common.Address, hash common.Hash, tx *types.T
 		pool.pending[addr] = newTxList(true)
 	}
 	list := pool.pending[addr]
+
+	// Account pending list is full
+	if uint64(list.Len()) >= pool.config.AccountPendingLimit {
+		pool.all.Remove(hash)
+		pool.calculateTxsLifecycle(types.Transactions{tx}, time.Now())
+		pool.priced.Removed(1)
+		pendingDiscardMeter.Mark(1)
+		return false
+	}
 
 	inserted, old := list.Add(tx, pool.currentState, pool.config.PriceBump, pool.chainconfig, pool.currentHead)
 	if !inserted {
@@ -1153,6 +1226,12 @@ func (pool *TxPool) removeTx(hash common.Hash, outofbound bool) {
 
 	addr, _ := types.Sender(pool.signer, tx) // already validated during insertion
 
+	defer func(addr common.Address) {
+		if pool.queue[addr].Empty() && pool.pending[addr].Empty() {
+			delete(pool.beats, addr)
+		}
+	}(addr)
+
 	// Remove it from the list of known transactions
 	pool.all.Remove(hash)
 	pool.calculateTxsLifecycle(types.Transactions{tx}, time.Now())
@@ -1189,7 +1268,6 @@ func (pool *TxPool) removeTx(hash common.Hash, outofbound bool) {
 		}
 		if future.Empty() {
 			delete(pool.queue, addr)
-			delete(pool.beats, addr)
 		}
 	}
 }
@@ -1474,6 +1552,7 @@ func (pool *TxPool) reset(oldHead, newHead *types.Header) {
 	pool.eip2718 = pool.chainconfig.IsCurie(next)
 	pool.eip1559 = pool.chainconfig.IsCurie(next)
 	pool.shanghai = pool.chainconfig.IsShanghai(next)
+	pool.eip7702 = pool.chainconfig.IsEuclidV2(newHead.Time)
 
 	// Update current head
 	pool.currentHead = next
@@ -1544,6 +1623,8 @@ func (pool *TxPool) promoteExecutables(accounts []common.Address) []*types.Trans
 		// Delete the entire queue entry if it became empty.
 		if list.Empty() {
 			delete(pool.queue, addr)
+		}
+		if pool.queue[addr].Empty() && pool.pending[addr].Empty() {
 			delete(pool.beats, addr)
 		}
 	}
@@ -1574,6 +1655,29 @@ func (pool *TxPool) executableTxFilter(costLimit *big.Int) func(tx *types.Transa
 // pending limit. The algorithm tries to reduce transaction counts by an approximately
 // equal number for all for accounts with many pending transactions.
 func (pool *TxPool) truncatePending() {
+	// Truncate pending lists to max length
+	for addr, list := range pool.pending {
+		if list.Len() > int(pool.config.AccountPendingLimit) {
+			caps := list.Cap(int(pool.config.AccountPendingLimit))
+			for _, tx := range caps {
+				// Drop the transaction from the global pools too
+				hash := tx.Hash()
+				pool.all.Remove(hash)
+				pool.calculateTxsLifecycle(types.Transactions{tx}, time.Now())
+
+				// Update the account nonce to the dropped transaction
+				// note: this will set pending nonce to the min nonce from the discarded txs
+				pool.pendingNonces.setIfLower(addr, tx.Nonce())
+				log.Trace("Removed pending transaction to comply with hard limit", "hash", hash.Hex())
+			}
+			pool.priced.Removed(len(caps))
+			pendingGauge.Dec(int64(len(caps)))
+			if pool.locals.contains(addr) {
+				localGauge.Dec(int64(len(caps)))
+			}
+		}
+	}
+
 	pending := uint64(0)
 	for _, list := range pool.pending {
 		pending += uint64(list.Len())
@@ -1780,6 +1884,43 @@ func (pool *TxPool) calculateTxsLifecycle(txs types.Transactions, t time.Time) {
 	}
 }
 
+// validateAuth verifies that the transaction complies with code authorization
+// restrictions brought by SetCode transaction type.
+func (pool *TxPool) validateAuth(from common.Address, tx *types.Transaction) error {
+	// Allow at most one in-flight tx for delegated accounts or those with a
+	// pending authorization.
+	if pool.currentState.GetKeccakCodeHash(from) != codehash.EmptyKeccakCodeHash || len(pool.all.auths[from]) != 0 {
+		var (
+			count  int
+			exists bool
+		)
+		pending := pool.pending[from]
+		if pending != nil {
+			count += pending.Len()
+			exists = pending.Overlaps(tx)
+		}
+		queue := pool.queue[from]
+		if queue != nil {
+			count += queue.Len()
+			exists = exists || queue.Overlaps(tx)
+		}
+		// Replace the existing in-flight transaction for delegated accounts
+		// are still supported
+		if count >= 1 && !exists {
+			return ErrInflightTxLimitReached
+		}
+	}
+	// Authorities cannot conflict with any pending or queued transactions.
+	if auths := tx.SetCodeAuthorities(); len(auths) > 0 {
+		for _, auth := range auths {
+			if pool.pending[auth] != nil || pool.queue[auth] != nil {
+				return ErrAuthorityReserved
+			}
+		}
+	}
+	return nil
+}
+
 // PauseReorgs stops any new reorg jobs to be started but doesn't interrupt any existing ones that are in flight
 // Keep in mind this function might block, although it is not expected to block for any significant amount of time
 func (pool *TxPool) PauseReorgs() {
@@ -1901,6 +2042,8 @@ type txLookup struct {
 	lock    sync.RWMutex
 	locals  map[common.Hash]*types.Transaction
 	remotes map[common.Hash]*types.Transaction
+
+	auths map[common.Address][]common.Hash // All accounts with a pooled authorization
 }
 
 // newTxLookup returns a new txLookup structure.
@@ -1908,6 +2051,7 @@ func newTxLookup() *txLookup {
 	return &txLookup{
 		locals:  make(map[common.Hash]*types.Transaction),
 		remotes: make(map[common.Hash]*types.Transaction),
+		auths:   make(map[common.Address][]common.Hash),
 	}
 }
 
@@ -2006,6 +2150,7 @@ func (t *txLookup) Add(tx *types.Transaction, local bool) {
 	} else {
 		t.remotes[tx.Hash()] = tx
 	}
+	t.addAuthorities(tx)
 }
 
 // Remove removes a transaction from the lookup.
@@ -2021,6 +2166,7 @@ func (t *txLookup) Remove(hash common.Hash) {
 		log.Error("No transaction found to be deleted", "hash", hash)
 		return
 	}
+	t.removeAuthorities(tx)
 	t.slots -= numSlots(tx)
 	slotsGauge.Update(int64(t.slots))
 
@@ -2055,6 +2201,44 @@ func (t *txLookup) RemotesBelowTip(threshold *big.Int) types.Transactions {
 		return true
 	}, false, true) // Only iterate remotes
 	return found
+}
+
+// addAuthorities tracks the supplied tx in relation to each authority it
+// specifies.
+func (t *txLookup) addAuthorities(tx *types.Transaction) {
+	for _, addr := range tx.SetCodeAuthorities() {
+		list, ok := t.auths[addr]
+		if !ok {
+			list = []common.Hash{}
+		}
+		if slices.Contains(list, tx.Hash()) {
+			// Don't add duplicates.
+			continue
+		}
+		list = append(list, tx.Hash())
+		t.auths[addr] = list
+	}
+}
+
+// removeAuthorities stops tracking the supplied tx in relation to its
+// authorities.
+func (t *txLookup) removeAuthorities(tx *types.Transaction) {
+	hash := tx.Hash()
+	for _, addr := range tx.SetCodeAuthorities() {
+		list := t.auths[addr]
+		// Remove tx from tracker.
+		if i := slices.Index(list, hash); i >= 0 {
+			list = append(list[:i], list[i+1:]...)
+		} else {
+			log.Error("Authority with untracked tx", "addr", addr, "hash", hash)
+		}
+		if len(list) == 0 {
+			// If list is newly empty, delete it entirely.
+			delete(t.auths, addr)
+			continue
+		}
+		t.auths[addr] = list
+	}
 }
 
 // numSlots calculates the number of slots needed for a single transaction.

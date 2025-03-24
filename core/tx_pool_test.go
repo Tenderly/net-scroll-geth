@@ -24,16 +24,20 @@ import (
 	"math/big"
 	"math/rand"
 	"os"
+	"slices"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/holiman/uint256"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/scroll-tech/go-ethereum/common"
 	"github.com/scroll-tech/go-ethereum/core/rawdb"
 	"github.com/scroll-tech/go-ethereum/core/state"
 	"github.com/scroll-tech/go-ethereum/core/types"
+	"github.com/scroll-tech/go-ethereum/core/vm"
 	"github.com/scroll-tech/go-ethereum/crypto"
 	"github.com/scroll-tech/go-ethereum/ethdb"
 	"github.com/scroll-tech/go-ethereum/event"
@@ -134,6 +138,43 @@ func dynamicFeeTx(nonce uint64, gaslimit uint64, gasFee *big.Int, tip *big.Int, 
 	return tx
 }
 
+type unsignedAuth struct {
+	nonce uint64
+	key   *ecdsa.PrivateKey
+}
+
+func setCodeTx(nonce uint64, key *ecdsa.PrivateKey, unsigned []unsignedAuth) *types.Transaction {
+	return pricedSetCodeTx(nonce, 250000, uint256.NewInt(1000), uint256.NewInt(1), key, unsigned)
+}
+
+func pricedSetCodeTx(nonce uint64, gaslimit uint64, gasFee, tip *uint256.Int, key *ecdsa.PrivateKey, unsigned []unsignedAuth) *types.Transaction {
+	var authList []types.SetCodeAuthorization
+	for _, u := range unsigned {
+		auth, _ := types.SignSetCode(u.key, types.SetCodeAuthorization{
+			ChainID: *uint256.MustFromBig(params.TestChainConfig.ChainID),
+			Address: common.Address{0x42},
+			Nonce:   u.nonce,
+		})
+		authList = append(authList, auth)
+	}
+	return pricedSetCodeTxWithAuth(nonce, gaslimit, gasFee, tip, key, authList)
+}
+
+func pricedSetCodeTxWithAuth(nonce uint64, gaslimit uint64, gasFee, tip *uint256.Int, key *ecdsa.PrivateKey, authList []types.SetCodeAuthorization) *types.Transaction {
+	return types.MustSignNewTx(key, types.LatestSignerForChainID(params.TestChainConfig.ChainID), &types.SetCodeTx{
+		ChainID:    uint256.MustFromBig(params.TestChainConfig.ChainID),
+		Nonce:      nonce,
+		GasTipCap:  tip,
+		GasFeeCap:  gasFee,
+		Gas:        gaslimit,
+		To:         common.Address{},
+		Value:      uint256.NewInt(100),
+		Data:       nil,
+		AccessList: nil,
+		AuthList:   authList,
+	})
+}
+
 func setupTxPool() (*TxPool, *ecdsa.PrivateKey) {
 	return setupTxPoolWithConfig(params.TestChainConfig)
 }
@@ -176,6 +217,34 @@ func validateTxPoolInternals(pool *TxPool) error {
 		}
 		if nonce := pool.pendingNonces.get(addr); nonce != last+1 {
 			return fmt.Errorf("pending nonce mismatch: have %v, want %v", nonce, last+1)
+		}
+	}
+	// Ensure all auths in pool are tracked
+	for _, tx := range pool.all.locals {
+		for _, addr := range tx.SetCodeAuthorities() {
+			list := pool.all.auths[addr]
+			if i := slices.Index(list, tx.Hash()); i < 0 {
+				return fmt.Errorf("authority not tracked: addr %s, tx %s", addr, tx.Hash())
+			}
+		}
+	}
+	for _, tx := range pool.all.remotes {
+		for _, addr := range tx.SetCodeAuthorities() {
+			list := pool.all.auths[addr]
+			if i := slices.Index(list, tx.Hash()); i < 0 {
+				return fmt.Errorf("authority not tracked: addr %s, tx %s", addr, tx.Hash())
+			}
+		}
+	}
+	// Ensure all auths in pool have an associated tx in locals or remotes.
+	for addr, hashes := range pool.all.auths {
+		for _, hash := range hashes {
+			_, inLocals := pool.all.locals[hash]
+			_, inRemotes := pool.all.remotes[hash]
+
+			if !inLocals && !inRemotes {
+				return fmt.Errorf("dangling authority, missing originating tx: addr %s, hash %s", addr, hash.Hex())
+			}
 		}
 	}
 	return nil
@@ -959,6 +1028,92 @@ func testTransactionQueueGlobalLimiting(t *testing.T, nolocals bool) {
 }
 
 // Tests that if an account remains idle for a prolonged amount of time, any
+// executable transactions queued up are dropped.
+func TestPendingTransactionTimeLimiting(t *testing.T) {
+	// Reduce the eviction interval to a testable amount
+	defer func(old time.Duration) { evictionInterval = old }(evictionInterval)
+	evictionInterval = time.Millisecond * 100
+
+	// Create the pool to test the non-expiration enforcement
+	statedb, _ := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
+	blockchain := &testBlockChain{1000000, statedb, new(event.Feed)}
+
+	config := testTxPoolConfig
+	config.AccountPendingLimit = 1
+	config.Lifetime = time.Second
+
+	pool := NewTxPool(config, params.TestChainConfig, blockchain)
+	defer pool.Stop()
+
+	// Create two test accounts to ensure remotes expire but locals do not
+	local, _ := crypto.GenerateKey()
+	remote, _ := crypto.GenerateKey()
+
+	testAddBalance(pool, crypto.PubkeyToAddress(local.PublicKey), big.NewInt(1000000000))
+	testAddBalance(pool, crypto.PubkeyToAddress(remote.PublicKey), big.NewInt(1000000000))
+
+	err := pool.AddLocal(pricedTransaction(0, 100000, big.NewInt(1), local))
+	require.NoError(t, err, "Failed to insert local transaction")
+
+	err = pool.AddRemote(pricedTransaction(0, 100000, big.NewInt(1), remote))
+	require.NoError(t, err, "Failed to insert remote transaction")
+
+	err = validateTxPoolInternals(pool)
+	require.NoError(t, err, "Pool internal state corrupted")
+
+	pending, queued := pool.Stats()
+	require.Equal(t, 2, pending, "Unexpected global pending tx count")
+	require.Equal(t, 0, queued, "Unexpected global queued tx count")
+
+	// Allow the eviction interval to run
+	time.Sleep(2 * evictionInterval)
+
+	// Transactions should not be evicted from the pool yet since lifetime duration has not passed
+	pending, queued = pool.Stats()
+	require.Equal(t, 2, pending, "Unexpected global pending tx count")
+	require.Equal(t, 0, queued, "Unexpected global queued tx count")
+
+	// Wait a bit for eviction to run and clean up any leftovers, and ensure only the local remains
+	time.Sleep(2 * config.Lifetime)
+
+	pending, queued = pool.Stats()
+	require.Equal(t, 1, pending, "Unexpected global pending tx count")
+	require.Equal(t, 0, queued, "Unexpected global queued tx count")
+
+	// Reinsert dropped remote transaction
+	err = pool.AddRemote(pricedTransaction(0, 100000, big.NewInt(1), remote))
+	require.NoError(t, err, "Failed to insert remote transaction")
+
+	err = validateTxPoolInternals(pool)
+	require.NoError(t, err, "Pool internal state corrupted")
+
+	pending, queued = pool.Stats()
+	require.Equal(t, 2, pending, "Unexpected global pending tx count")
+	require.Equal(t, 0, queued, "Unexpected global queued tx count")
+
+	// Try to insert a 2nd transaction but it is discarded due to account pending limit
+	time.Sleep(config.Lifetime / 2)
+
+	err = pool.AddRemote(pricedTransaction(1, 100000, big.NewInt(1), remote))
+	require.NoError(t, err, "Failed to insert remote transaction")
+
+	err = validateTxPoolInternals(pool)
+	require.NoError(t, err, "Pool internal state corrupted")
+
+	pending, queued = pool.Stats()
+	require.Equal(t, 2, pending, "Unexpected global pending tx count")
+	require.Equal(t, 0, queued, "Unexpected global queued tx count")
+
+	// Clean up remote transaction, this shows that beat was not bumped after failed insertion
+	time.Sleep(config.Lifetime)
+
+	pending, queued = pool.Stats()
+	require.Equal(t, 1, pending, "Unexpected global pending tx count")
+	require.Equal(t, 0, queued, "Unexpected global queued tx count")
+
+}
+
+// Tests that if an account remains idle for a prolonged amount of time, any
 // non-executable transactions queued up are dropped to prevent wasting resources
 // on shuffling them around.
 //
@@ -1097,8 +1252,14 @@ func testTransactionQueueTimeLimiting(t *testing.T, nolocals bool) {
 	// The whole life time pass after last promotion, kick out stale transactions
 	time.Sleep(2 * config.Lifetime)
 	pending, queued = pool.Stats()
-	if pending != 2 {
-		t.Fatalf("pending transactions mismatched: have %d, want %d", pending, 2)
+	if nolocals {
+		if pending != 0 {
+			t.Fatalf("pending transactions mismatched: have %d, want %d", pending, 0)
+		}
+	} else {
+		if pending != 1 {
+			t.Fatalf("pending transactions mismatched: have %d, want %d", pending, 1)
+		}
 	}
 	if nolocals {
 		if queued != 0 {
@@ -1201,6 +1362,102 @@ func TestTransactionPendingGlobalLimiting(t *testing.T) {
 	if err := validateTxPoolInternals(pool); err != nil {
 		t.Fatalf("pool internal state corrupted: %v", err)
 	}
+}
+
+// Tests that the transaction count belonging to any account cannot go
+// above the configured hard threshold.
+func TestTransactionPendingPerAccountLimiting(t *testing.T) {
+	t.Parallel()
+
+	// Create the pool to test the limit enforcement with
+	statedb, _ := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
+	blockchain := &testBlockChain{1000000, statedb, new(event.Feed)}
+
+	limit := 16
+
+	config := testTxPoolConfig
+	config.AccountPendingLimit = uint64(limit)
+
+	pool := NewTxPool(config, params.TestChainConfig, blockchain)
+	defer pool.Stop()
+
+	// Create a number of test accounts and fund them
+	keys := make([]*ecdsa.PrivateKey, 5)
+	for i := 0; i < len(keys); i++ {
+		keys[i], _ = crypto.GenerateKey()
+		testAddBalance(pool, crypto.PubkeyToAddress(keys[i].PublicKey), big.NewInt(1000000))
+	}
+
+	// Generate and queue a batch of transactions (limit + 1 per account)
+	nonces := make(map[common.Address]uint64)
+	txs := types.Transactions{}
+	for _, key := range keys {
+		addr := crypto.PubkeyToAddress(key.PublicKey)
+		for j := 0; j < limit+1; j++ {
+			txs = append(txs, transaction(nonces[addr], 100000, key))
+			nonces[addr]++
+		}
+	}
+
+	// Import the batch and verify txpool consistency
+	pool.AddRemotesSync(txs)
+	err := validateTxPoolInternals(pool)
+	require.NoError(t, err, "pool internal state corrupted")
+
+	// Check that limits are enforced
+	for _, list := range pool.pending {
+		require.LessOrEqual(t, list.Len(), limit, "Pending transactions for account overflow allowance")
+	}
+
+	pending, queued := pool.Stats()
+	require.Equal(t, limit*5, pending, "Unexpected global pending tx count")
+	require.Equal(t, 0, queued, "Unexpected global queued tx count")
+
+	// Save dropped nonce for future use
+	pendingNonces := make(map[common.Address]uint64)
+	for addr, nonce := range nonces {
+		pendingNonces[addr] = nonce - 1
+	}
+
+	// Generate and queue a batch of transactions (with nonce gap)
+	txs = types.Transactions{}
+	for _, key := range keys {
+		addr := crypto.PubkeyToAddress(key.PublicKey)
+		for j := 0; j < limit; j++ {
+			txs = append(txs, transaction(nonces[addr], 100000, key))
+			nonces[addr]++
+		}
+	}
+
+	// Import the batch and verify txpool consistency
+	pool.AddRemotesSync(txs)
+	err = validateTxPoolInternals(pool)
+	require.NoError(t, err, "pool internal state corrupted")
+
+	pending, queued = pool.Stats()
+	require.Equal(t, limit*5, pending, "Unexpected global pending tx count")
+	require.Equal(t, limit*5, queued, "Unexpected global queued tx count")
+
+	// Generate and queue a batch of transactions (fill the nonce gap)
+	txs = types.Transactions{}
+	for _, key := range keys {
+		addr := crypto.PubkeyToAddress(key.PublicKey)
+		txs = append(txs, transaction(pendingNonces[addr], 100000, key))
+	}
+
+	// Import the batch and verify txpool consistency
+	pool.AddRemotesSync(txs)
+	err = validateTxPoolInternals(pool)
+	require.NoError(t, err, "pool internal state corrupted")
+
+	// Check that limits are enforced
+	for _, list := range pool.pending {
+		require.LessOrEqual(t, list.Len(), limit, "Pending transactions for account overflow allowance")
+	}
+
+	pending, queued = pool.Stats()
+	require.Equal(t, limit*5, pending, "Unexpected global pending tx count")
+	require.Equal(t, 0, queued, "Unexpected global queued tx count")
 }
 
 // Test the limit on transaction size is enforced correctly.
@@ -2439,6 +2696,299 @@ func TestTransactionSlotCount(t *testing.T) {
 	bigTx := pricedDataTransaction(0, 0, big.NewInt(0), key, uint64(10*txSlotSize))
 	if slots := numSlots(bigTx); slots != 11 {
 		t.Fatalf("big transactions slot count mismatch: have %d want %d", slots, 11)
+	}
+}
+
+// TestSetCodeTransactions tests a few scenarios regarding the EIP-7702
+// SetCodeTx.
+func TestSetCodeTransactions(t *testing.T) {
+	t.Parallel()
+
+	// Create the test accounts
+	var (
+		keyA, _ = crypto.GenerateKey()
+		keyB, _ = crypto.GenerateKey()
+		keyC, _ = crypto.GenerateKey()
+		addrA   = crypto.PubkeyToAddress(keyA.PublicKey)
+		addrB   = crypto.PubkeyToAddress(keyB.PublicKey)
+		addrC   = crypto.PubkeyToAddress(keyC.PublicKey)
+	)
+
+	for _, tt := range []struct {
+		name    string
+		pending int
+		queued  int
+		run     func(string, *TxPool, *state.StateDB)
+	}{
+		{
+			// Check that only one in-flight transaction is allowed for accounts
+			// with delegation set. Also verify the accepted transaction can be
+			// replaced by fee.
+			name:    "only-one-in-flight",
+			pending: 1,
+			run: func(name string, pool *TxPool, statedb *state.StateDB) {
+				aa := common.Address{0xaa, 0xaa}
+				statedb.SetCode(addrA, append(types.DelegationPrefix, aa.Bytes()...))
+				statedb.SetCode(aa, []byte{byte(vm.ADDRESS), byte(vm.PUSH0), byte(vm.SSTORE)})
+				// Send transactions. First is accepted, second is rejected.
+				if err := pool.addRemoteSync(pricedTransaction(0, 100000, big.NewInt(1), keyA)); err != nil {
+					t.Fatalf("%s: failed to add remote transaction: %v", name, err)
+				}
+				if err := pool.addRemoteSync(pricedTransaction(1, 100000, big.NewInt(1), keyA)); !errors.Is(err, ErrInflightTxLimitReached) {
+					t.Fatalf("%s: error mismatch: want %v, have %v", name, ErrInflightTxLimitReached, err)
+				}
+				// Also check gapped transaction.
+				if err := pool.addRemoteSync(pricedTransaction(2, 100000, big.NewInt(1), keyA)); !errors.Is(err, ErrInflightTxLimitReached) {
+					t.Fatalf("%s: error mismatch: want %v, have %v", name, ErrInflightTxLimitReached, err)
+				}
+				// Replace by fee.
+				if err := pool.addRemoteSync(pricedTransaction(0, 100000, big.NewInt(10), keyA)); err != nil {
+					t.Fatalf("%s: failed to replace with remote transaction: %v", name, err)
+				}
+			},
+		},
+		{
+			name:    "allow-setcode-tx-with-pending-authority-tx",
+			pending: 2,
+			run: func(name string, pool *TxPool, statedb *state.StateDB) {
+				// Send two transactions where the first has no conflicting delegations and
+				// the second should be allowed despite conflicting with the authorities in 1).
+				if err := pool.addRemoteSync(setCodeTx(0, keyA, []unsignedAuth{{1, keyC}})); err != nil {
+					t.Fatalf("%s: failed to add with remote setcode transaction: %v", name, err)
+				}
+				if err := pool.addRemoteSync(setCodeTx(0, keyB, []unsignedAuth{{1, keyC}})); err != nil {
+					t.Fatalf("%s: failed to add conflicting delegation: %v", name, err)
+				}
+			},
+		},
+		{
+			name:    "allow-one-tx-from-pooled-delegation",
+			pending: 2,
+			run: func(name string, pool *TxPool, statedb *state.StateDB) {
+				// Verify C cannot originate another transaction when it has a pooled delegation.
+				if err := pool.addRemoteSync(setCodeTx(0, keyA, []unsignedAuth{{0, keyC}})); err != nil {
+					t.Fatalf("%s: failed to add with remote setcode transaction: %v", name, err)
+				}
+				if err := pool.addRemoteSync(pricedTransaction(0, 100000, big.NewInt(1), keyC)); err != nil {
+					t.Fatalf("%s: failed to add with pending delegation: %v", name, err)
+				}
+				// Also check gapped transaction is rejected.
+				if err := pool.addRemoteSync(pricedTransaction(1, 100000, big.NewInt(1), keyC)); !errors.Is(err, ErrInflightTxLimitReached) {
+					t.Fatalf("%s: error mismatch: want %v, have %v", name, ErrInflightTxLimitReached, err)
+				}
+			},
+		},
+		{
+			name:    "replace-by-fee-setcode-tx",
+			pending: 1,
+			run: func(name string, pool *TxPool, statedb *state.StateDB) {
+				// 4. Fee bump the setcode tx send.
+				if err := pool.addRemoteSync(setCodeTx(0, keyB, []unsignedAuth{{1, keyC}})); err != nil {
+					t.Fatalf("%s: failed to add with remote setcode transaction: %v", name, err)
+				}
+				if err := pool.addRemoteSync(pricedSetCodeTx(0, 250000, uint256.NewInt(2000), uint256.NewInt(2), keyB, []unsignedAuth{{0, keyC}})); err != nil {
+					t.Fatalf("%s: failed to add with remote setcode transaction: %v", name, err)
+				}
+			},
+		},
+		{
+			name:    "allow-tx-from-replaced-authority",
+			pending: 2,
+			run: func(name string, pool *TxPool, statedb *state.StateDB) {
+				// Fee bump with a different auth list. Make sure that unlocks the authorities.
+				if err := pool.addRemoteSync(pricedSetCodeTx(0, 250000, uint256.NewInt(10), uint256.NewInt(3), keyA, []unsignedAuth{{0, keyB}})); err != nil {
+					t.Fatalf("%s: failed to add with remote setcode transaction: %v", name, err)
+				}
+				if err := pool.addRemoteSync(pricedSetCodeTx(0, 250000, uint256.NewInt(3000), uint256.NewInt(300), keyA, []unsignedAuth{{0, keyC}})); err != nil {
+					t.Fatalf("%s: failed to add with remote setcode transaction: %v", name, err)
+				}
+				// Now send a regular tx from B.
+				if err := pool.addRemoteSync(pricedTransaction(0, 100000, big.NewInt(10), keyB)); err != nil {
+					t.Fatalf("%s: failed to replace with remote transaction: %v", name, err)
+				}
+			},
+		},
+		{
+			name:    "allow-tx-from-replaced-self-sponsor-authority",
+			pending: 2,
+			run: func(name string, pool *TxPool, statedb *state.StateDB) {
+				if err := pool.addRemoteSync(pricedSetCodeTx(0, 250000, uint256.NewInt(10), uint256.NewInt(3), keyA, []unsignedAuth{{0, keyA}})); err != nil {
+					t.Fatalf("%s: failed to add with remote setcode transaction: %v", name, err)
+				}
+				if err := pool.addRemoteSync(pricedSetCodeTx(0, 250000, uint256.NewInt(30), uint256.NewInt(30), keyA, []unsignedAuth{{0, keyB}})); err != nil {
+					t.Fatalf("%s: failed to add with remote setcode transaction: %v", name, err)
+				}
+				// Now send a regular tx from keyA.
+				if err := pool.addRemoteSync(pricedTransaction(0, 100000, big.NewInt(1000), keyA)); err != nil {
+					t.Fatalf("%s: failed to replace with remote transaction: %v", name, err)
+				}
+				// Make sure we can still send from keyB.
+				if err := pool.addRemoteSync(pricedTransaction(0, 100000, big.NewInt(1000), keyB)); err != nil {
+					t.Fatalf("%s: failed to replace with remote transaction: %v", name, err)
+				}
+			},
+		},
+		{
+			name:    "track-multiple-conflicting-delegations",
+			pending: 3,
+			run: func(name string, pool *TxPool, statedb *state.StateDB) {
+				// Send two setcode txs both with C as an authority.
+				if err := pool.addRemoteSync(pricedSetCodeTx(0, 250000, uint256.NewInt(10), uint256.NewInt(3), keyA, []unsignedAuth{{0, keyC}})); err != nil {
+					t.Fatalf("%s: failed to add with remote setcode transaction: %v", name, err)
+				}
+				if err := pool.addRemoteSync(pricedSetCodeTx(0, 250000, uint256.NewInt(30), uint256.NewInt(30), keyB, []unsignedAuth{{0, keyC}})); err != nil {
+					t.Fatalf("%s: failed to add with remote setcode transaction: %v", name, err)
+				}
+				// Replace the tx from A with a non-setcode tx.
+				if err := pool.addRemoteSync(pricedTransaction(0, 100000, big.NewInt(1000), keyA)); err != nil {
+					t.Fatalf("%s: failed to replace with remote transaction: %v", name, err)
+				}
+				// Make sure we can only pool one tx from keyC since it is still a
+				// pending authority.
+				if err := pool.addRemoteSync(pricedTransaction(0, 100000, big.NewInt(1000), keyC)); err != nil {
+					t.Fatalf("%s: failed to added single pooled for account with pending delegation: %v", name, err)
+				}
+				if err, want := pool.addRemoteSync(pricedTransaction(1, 100000, big.NewInt(1000), keyC)), ErrInflightTxLimitReached; !errors.Is(err, want) {
+					t.Fatalf("%s: error mismatch: want %v, have %v", name, want, err)
+				}
+			},
+		},
+		{
+			name:    "reject-delegation-from-pending-account",
+			pending: 1,
+			run: func(name string, pool *TxPool, statedb *state.StateDB) {
+				// Attempt to submit a delegation from an account with a pending tx.
+				if err := pool.addRemoteSync(pricedTransaction(0, 100000, big.NewInt(1000), keyC)); err != nil {
+					t.Fatalf("%s: failed to add with remote setcode transaction: %v", name, err)
+				}
+				if err, want := pool.addRemoteSync(setCodeTx(0, keyA, []unsignedAuth{{1, keyC}})), ErrAuthorityReserved; !errors.Is(err, want) {
+					t.Fatalf("%s: error mismatch: want %v, have %v", name, want, err)
+				}
+			},
+		},
+		{
+			name:    "nonce-gapped-invalid-auth-does-not-block-pending-tx",
+			pending: 1,
+			queued:  1,
+			run: func(name string, pool *TxPool, statedb *state.StateDB) {
+				if err := pool.addRemoteSync(setCodeTx(1, keyC, []unsignedAuth{{0, keyA}})); err != nil {
+					t.Fatalf("%s: failed to add nonce-gapped setcode transaction: %v", name, err)
+				}
+				if err := pool.addRemoteSync(pricedTransaction(0, 100000, big.NewInt(1000), keyA)); err != nil {
+					t.Fatalf("%s: failed to add pending transaction: %v", name, err)
+				}
+			},
+		},
+		{
+			name:    "remove-hash-from-authority-tracker",
+			pending: 10,
+			run: func(name string, pool *TxPool, statedb *state.StateDB) {
+				var keys []*ecdsa.PrivateKey
+				for i := 0; i < 30; i++ {
+					key, _ := crypto.GenerateKey()
+					keys = append(keys, key)
+					addr := crypto.PubkeyToAddress(key.PublicKey)
+					testAddBalance(pool, addr, big.NewInt(params.Ether))
+				}
+				// Create a transactions with 3 unique auths so the lookup's auth map is
+				// filled with addresses.
+				for i := 0; i < 30; i += 3 {
+					if err := pool.addRemoteSync(pricedSetCodeTx(0, 250000, uint256.NewInt(10), uint256.NewInt(3), keys[i], []unsignedAuth{{0, keys[i]}, {0, keys[i+1]}, {0, keys[i+2]}})); err != nil {
+						t.Fatalf("%s: failed to add with remote setcode transaction: %v", name, err)
+					}
+				}
+				// Replace one of the transactions with a normal transaction so that the
+				// original hash is removed from the tracker. The hash should be
+				// associated with 3 different authorities.
+				if err := pool.addRemoteSync(pricedTransaction(0, 100000, big.NewInt(1000), keys[0])); err != nil {
+					t.Fatalf("%s: failed to replace with remote transaction: %v", name, err)
+				}
+			},
+		},
+	} {
+		// Create the pool to test the status retrievals with
+		statedb, _ := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
+		blockchain := &testBlockChain{1000000, statedb, new(event.Feed)}
+		pool := NewTxPool(testTxPoolConfig, params.TestChainConfig, blockchain)
+		defer pool.Stop()
+
+		testAddBalance(pool, addrA, big.NewInt(params.Ether))
+		testAddBalance(pool, addrB, big.NewInt(params.Ether))
+		testAddBalance(pool, addrC, big.NewInt(params.Ether))
+
+		aa := common.Address{0xaa, 0xaa}
+		statedb.SetCode(addrA, append(types.DelegationPrefix, aa.Bytes()...))
+		statedb.SetCode(aa, []byte{byte(vm.ADDRESS), byte(vm.PUSH0), byte(vm.SSTORE)})
+
+		tt.run(tt.name, pool, statedb)
+		pending, queued := pool.Stats()
+		if pending != tt.pending {
+			t.Fatalf("%s: pending transactions mismatched: have %d, want %d", tt.name, pending, tt.pending)
+		}
+		if queued != tt.queued {
+			t.Fatalf("%s: queued transactions mismatched: have %d, want %d", tt.name, queued, tt.queued)
+		}
+		if err := validateTxPoolInternals(pool); err != nil {
+			t.Fatalf("%s: pool internal state corrupted: %v", tt.name, err)
+		}
+	}
+}
+
+func TestSetCodeTransactionsReorg(t *testing.T) {
+	t.Parallel()
+
+	// Create the pool to test the status retrievals with
+	statedb, _ := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
+	blockchain := &testBlockChain{1000000, statedb, new(event.Feed)}
+
+	pool := NewTxPool(testTxPoolConfig, params.TestChainConfig, blockchain)
+	defer pool.Stop()
+
+	// Create the test accounts
+	var (
+		keyA, _ = crypto.GenerateKey()
+		addrA   = crypto.PubkeyToAddress(keyA.PublicKey)
+	)
+	testAddBalance(pool, addrA, big.NewInt(params.Ether))
+	// Send an authorization for 0x42
+	var authList []types.SetCodeAuthorization
+	auth, _ := types.SignSetCode(keyA, types.SetCodeAuthorization{
+		ChainID: *uint256.MustFromBig(params.TestChainConfig.ChainID),
+		Address: common.Address{0x42},
+		Nonce:   0,
+	})
+	authList = append(authList, auth)
+	if err := pool.addRemoteSync(pricedSetCodeTxWithAuth(0, 250000, uint256.NewInt(10), uint256.NewInt(3), keyA, authList)); err != nil {
+		t.Fatalf("failed to add with remote setcode transaction: %v", err)
+	}
+	// Simulate the chain moving
+	blockchain.statedb.SetNonce(addrA, 1)
+	blockchain.statedb.SetCode(addrA, types.AddressToDelegation(auth.Address))
+	<-pool.requestReset(nil, nil)
+	// Set an authorization for 0x00
+	auth, _ = types.SignSetCode(keyA, types.SetCodeAuthorization{
+		ChainID: *uint256.MustFromBig(params.TestChainConfig.ChainID),
+		Address: common.Address{},
+		Nonce:   0,
+	})
+	authList = append(authList, auth)
+	if err := pool.addRemoteSync(pricedSetCodeTxWithAuth(1, 250000, uint256.NewInt(10), uint256.NewInt(3), keyA, authList)); err != nil {
+		t.Fatalf("failed to add with remote setcode transaction: %v", err)
+	}
+	// Try to add a transactions in
+	if err := pool.addRemoteSync(pricedTransaction(2, 100000, big.NewInt(1000), keyA)); !errors.Is(err, ErrInflightTxLimitReached) {
+		t.Fatalf("unexpected error %v, expecting %v", err, ErrInflightTxLimitReached)
+	}
+	// Simulate the chain moving
+	blockchain.statedb.SetNonce(addrA, 2)
+	blockchain.statedb.SetCode(addrA, nil)
+	<-pool.requestReset(nil, nil)
+	// Now send two transactions from addrA
+	if err := pool.addRemoteSync(pricedTransaction(2, 100000, big.NewInt(1000), keyA)); err != nil {
+		t.Fatalf("failed to added single transaction: %v", err)
+	}
+	if err := pool.addRemoteSync(pricedTransaction(3, 100000, big.NewInt(1000), keyA)); err != nil {
+		t.Fatalf("failed to added single transaction: %v", err)
 	}
 }
 

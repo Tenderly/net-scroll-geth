@@ -6,69 +6,82 @@ import (
 
 	"github.com/scroll-tech/da-codec/encoding"
 
+	"github.com/scroll-tech/go-ethereum/common"
 	"github.com/scroll-tech/go-ethereum/core/rawdb"
 	"github.com/scroll-tech/go-ethereum/core/types"
 	"github.com/scroll-tech/go-ethereum/ethdb"
+	"github.com/scroll-tech/go-ethereum/log"
 	"github.com/scroll-tech/go-ethereum/rollup/da_syncer/serrors"
+	"github.com/scroll-tech/go-ethereum/rollup/l1"
 )
 
 type CommitBatchDAV0 struct {
-	version                    uint8
+	db ethdb.Database
+
+	version                    encoding.CodecVersion
 	batchIndex                 uint64
 	parentTotalL1MessagePopped uint64
+	l1MessagesPopped           int
 	skippedL1MessageBitmap     []byte
 	chunks                     []*encoding.DAChunkRawTx
-	l1Txs                      []*types.L1MessageTx
 
-	l1BlockNumber uint64
+	event *l1.CommitBatchEvent
 }
 
 func NewCommitBatchDAV0(db ethdb.Database,
 	codec encoding.Codec,
-	version uint8,
-	batchIndex uint64,
+	commitEvent *l1.CommitBatchEvent,
 	parentBatchHeader []byte,
 	chunks [][]byte,
 	skippedL1MessageBitmap []byte,
-	l1BlockNumber uint64,
 ) (*CommitBatchDAV0, error) {
 	decodedChunks, err := codec.DecodeDAChunksRawTx(chunks)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unpack chunks: %d, err: %w", batchIndex, err)
+		return nil, fmt.Errorf("failed to unpack chunks: %d, err: %w", commitEvent.BatchIndex().Uint64(), err)
 	}
 
-	return NewCommitBatchDAV0WithChunks(db, version, batchIndex, parentBatchHeader, decodedChunks, skippedL1MessageBitmap, l1BlockNumber)
+	return NewCommitBatchDAV0WithChunks(db, codec.Version(), commitEvent.BatchIndex().Uint64(), parentBatchHeader, decodedChunks, skippedL1MessageBitmap, commitEvent)
 }
 
 func NewCommitBatchDAV0WithChunks(db ethdb.Database,
-	version uint8,
+	version encoding.CodecVersion,
 	batchIndex uint64,
 	parentBatchHeader []byte,
 	decodedChunks []*encoding.DAChunkRawTx,
 	skippedL1MessageBitmap []byte,
-	l1BlockNumber uint64,
+	event *l1.CommitBatchEvent,
 ) (*CommitBatchDAV0, error) {
 	parentTotalL1MessagePopped := getBatchTotalL1MessagePopped(parentBatchHeader)
-	l1Txs, err := getL1Messages(db, parentTotalL1MessagePopped, skippedL1MessageBitmap, getTotalMessagesPoppedFromChunks(decodedChunks))
-	if err != nil {
-		return nil, fmt.Errorf("failed to get L1 messages for v0 batch %d: %w", batchIndex, err)
-	}
 
 	return &CommitBatchDAV0{
+		db:                         db,
 		version:                    version,
 		batchIndex:                 batchIndex,
 		parentTotalL1MessagePopped: parentTotalL1MessagePopped,
+		l1MessagesPopped:           getTotalMessagesPoppedFromChunks(decodedChunks),
 		skippedL1MessageBitmap:     skippedL1MessageBitmap,
 		chunks:                     decodedChunks,
-		l1Txs:                      l1Txs,
-		l1BlockNumber:              l1BlockNumber,
+		event:                      event,
 	}, nil
 }
 
-func NewCommitBatchDAV0Empty() *CommitBatchDAV0 {
+func NewCommitBatchDAV0Empty(event *l1.CommitBatchEvent) *CommitBatchDAV0 {
 	return &CommitBatchDAV0{
 		batchIndex: 0,
+		event:      event,
 	}
+}
+
+func (c *CommitBatchDAV0) Version() encoding.CodecVersion {
+	return c.version
+}
+
+func (c *CommitBatchDAV0) Chunks() []*encoding.DAChunkRawTx {
+	return c.chunks
+}
+
+func (c *CommitBatchDAV0) BlobVersionedHashes() []common.Hash {
+	return nil
 }
 
 func (c *CommitBatchDAV0) Type() Type {
@@ -76,7 +89,11 @@ func (c *CommitBatchDAV0) Type() Type {
 }
 
 func (c *CommitBatchDAV0) L1BlockNumber() uint64 {
-	return c.l1BlockNumber
+	return c.event.BlockNumber()
+}
+
+func (c *CommitBatchDAV0) Event() l1.RollupEvent {
+	return c.event
 }
 
 func (c *CommitBatchDAV0) BatchIndex() uint64 {
@@ -92,7 +109,12 @@ func (c *CommitBatchDAV0) CompareTo(other Entry) int {
 	return 0
 }
 
-func (c *CommitBatchDAV0) Blocks() []*PartialBlock {
+func (c *CommitBatchDAV0) Blocks() ([]*PartialBlock, error) {
+	l1Txs, err := getL1Messages(c.db, c.parentTotalL1MessagePopped, c.skippedL1MessageBitmap, c.l1MessagesPopped)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get L1 messages for v0 batch %d: %w", c.batchIndex, err)
+	}
+
 	var blocks []*PartialBlock
 	l1TxPointer := 0
 
@@ -102,8 +124,8 @@ func (c *CommitBatchDAV0) Blocks() []*PartialBlock {
 			// create txs
 			txs := make(types.Transactions, 0, daBlock.NumTransactions())
 			// insert l1 msgs
-			for l1TxPointer < len(c.l1Txs) && c.l1Txs[l1TxPointer].QueueIndex < curL1TxIndex+uint64(daBlock.NumL1Messages()) {
-				l1Tx := types.NewTx(c.l1Txs[l1TxPointer])
+			for l1TxPointer < len(l1Txs) && l1Txs[l1TxPointer].QueueIndex < curL1TxIndex+uint64(daBlock.NumL1Messages()) {
+				l1Tx := types.NewTx(l1Txs[l1TxPointer])
 				txs = append(txs, l1Tx)
 				l1TxPointer++
 			}
@@ -126,7 +148,19 @@ func (c *CommitBatchDAV0) Blocks() []*PartialBlock {
 		}
 	}
 
-	return blocks
+	return blocks, nil
+}
+
+func (c *CommitBatchDAV0) SetParentTotalL1MessagePopped(totalL1MessagePopped uint64) {
+	// we ignore setting parentTotalL1MessagePopped from outside as it is calculated from parent batch header for V0 batches
+}
+
+func (c *CommitBatchDAV0) TotalL1MessagesPopped() uint64 {
+	return c.parentTotalL1MessagePopped + uint64(c.l1MessagesPopped)
+}
+
+func (c *CommitBatchDAV0) L1MessagesPoppedInBatch() uint64 {
+	return uint64(c.l1MessagesPopped)
 }
 
 func getTotalMessagesPoppedFromChunks(decodedChunks []*encoding.DAChunkRawTx) int {
@@ -141,6 +175,7 @@ func getTotalMessagesPoppedFromChunks(decodedChunks []*encoding.DAChunkRawTx) in
 
 func getL1Messages(db ethdb.Database, parentTotalL1MessagePopped uint64, skippedBitmap []byte, totalL1MessagePopped int) ([]*types.L1MessageTx, error) {
 	var txs []*types.L1MessageTx
+
 	decodedSkippedBitmap, err := encoding.DecodeBitmap(skippedBitmap, totalL1MessagePopped)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode skipped message bitmap: err: %w", err)
@@ -155,6 +190,7 @@ func getL1Messages(db ethdb.Database, parentTotalL1MessagePopped uint64, skipped
 		}
 		l1Tx := rawdb.ReadL1Message(db, currentIndex)
 		if l1Tx == nil {
+			log.Info("L1 message not yet available", "index", currentIndex)
 			// message not yet available
 			// we return serrors.EOFError as this will be handled in the syncing pipeline with a backoff and retry
 			return nil, serrors.EOFError

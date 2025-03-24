@@ -50,6 +50,7 @@ var AppHelpFlagGroups = []flags.FlagGroup{
 			utils.ScrollAlphaFlag,
 			utils.ScrollSepoliaFlag,
 			utils.ScrollFlag,
+			utils.ScrollMPTFlag,
 			utils.SyncModeFlag,
 			utils.ExitWhenSyncedFlag,
 			utils.GCModeFlag,
@@ -108,6 +109,7 @@ var AppHelpFlagGroups = []flags.FlagGroup{
 			utils.TxPoolGlobalSlotsFlag,
 			utils.TxPoolAccountQueueFlag,
 			utils.TxPoolGlobalQueueFlag,
+			utils.TxPoolAccountPendingLimitFlag,
 			utils.TxPoolLifetimeFlag,
 		},
 	},
@@ -195,6 +197,7 @@ var AppHelpFlagGroups = []flags.FlagGroup{
 			utils.MinerNoVerifyFlag,
 			utils.MinerStoreSkippedTxTracesFlag,
 			utils.MinerMaxAccountsNumFlag,
+			utils.MinerAllowEmptyFlag,
 		},
 	},
 	{

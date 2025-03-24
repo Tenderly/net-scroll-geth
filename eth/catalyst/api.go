@@ -150,7 +150,7 @@ func (api *consensusAPI) AssembleBlock(params assembleBlockParams) (*executableD
 		parentL1BaseFee := fees.GetL1BaseFee(stateDb)
 		header.BaseFee = misc.CalcBaseFee(config, parent.Header(), parentL1BaseFee)
 	}
-	err = api.eth.Engine().Prepare(bc, header)
+	err = api.eth.Engine().Prepare(bc, header, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func (api *consensusAPI) AssembleBlock(params assembleBlockParams) (*executableD
 	}
 
 	var (
-		signer       = types.MakeSigner(bc.Config(), header.Number)
+		signer       = types.MakeSigner(bc.Config(), header.Number, header.Time)
 		txHeap       = types.NewTransactionsByPriceAndNonce(signer, pending, nil)
 		transactions []*types.Transaction
 	)

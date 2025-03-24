@@ -109,6 +109,8 @@ var (
 	l1MessagePrefix                   = []byte("L1") // l1MessagePrefix + queueIndex (uint64 big endian) -> L1MessageTx
 	firstQueueIndexNotInL2BlockPrefix = []byte("q")  // firstQueueIndexNotInL2BlockPrefix + L2 block hash -> enqueue index
 	highestSyncedQueueIndexKey        = []byte("HighestSyncedQueueIndex")
+	l1MessageV2StartIndexKey          = []byte("MessageQueueV2StartIndex")
+	l1MessageV2FirstL1BlockNumberKey  = []byte("MessageQueueV2FirstL1BlockNumber")
 
 	// Scroll rollup event store
 	rollupEventSyncedL1BlockNumberKey = []byte("R-LastRollupEventSyncedL1BlockNumber")
@@ -127,6 +129,8 @@ var (
 
 	// Scroll da syncer store
 	daSyncedL1BlockNumberKey = []byte("LastDASyncedL1BlockNumber")
+
+	diskStateRootPrefix = []byte("disk-state-root")
 )
 
 // Use the updated "L1" prefix on all new networks
@@ -311,4 +315,8 @@ func batchMetaKey(batchIndex uint64) []byte {
 // committedBatchMetaKey = committedBatchMetaPrefix + batch index (uint64 big endian)
 func committedBatchMetaKey(batchIndex uint64) []byte {
 	return append(committedBatchMetaPrefix, encodeBigEndian(batchIndex)...)
+}
+
+func diskStateRootKey(headerRoot common.Hash) []byte {
+	return append(diskStateRootPrefix, headerRoot.Bytes()...)
 }

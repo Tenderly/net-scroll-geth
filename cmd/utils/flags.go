@@ -183,6 +183,10 @@ var (
 		Name:  "scroll",
 		Usage: "Scroll mainnet",
 	}
+	ScrollMPTFlag = cli.BoolFlag{
+		Name:  "scroll-mpt",
+		Usage: "Use MPT trie for state storage",
+	}
 	DeveloperFlag = cli.BoolFlag{
 		Name:  "dev",
 		Usage: "Ephemeral proof-of-authority network with a pre-funded developer account, mining enabled",
@@ -402,6 +406,11 @@ var (
 		Usage: "Maximum number of non-executable transaction slots for all accounts",
 		Value: ethconfig.Defaults.TxPool.GlobalQueue,
 	}
+	TxPoolAccountPendingLimitFlag = cli.Uint64Flag{
+		Name:  "txpool.accountpendinglimit",
+		Usage: "Maximum number of executable transactions allowed per account",
+		Value: ethconfig.Defaults.TxPool.AccountPendingLimit,
+	}
 	TxPoolLifetimeFlag = cli.DurationFlag{
 		Name:  "txpool.lifetime",
 		Usage: "Maximum amount of time non-executable transaction are queued",
@@ -505,6 +514,10 @@ var (
 		Name:  "miner.maxaccountsnum",
 		Usage: "Maximum number of accounts that miner will fetch the pending transactions of when building a new block",
 		Value: math.MaxInt,
+	}
+	MinerAllowEmptyFlag = cli.BoolFlag{
+		Name:  "miner.allowempty",
+		Usage: "Allow sealing empty blocks",
 	}
 	// Account settings
 	UnlockedAccountFlag = cli.StringFlag{
@@ -845,6 +858,10 @@ var (
 		Name:  "l1.sync.startblock",
 		Usage: "L1 block height to start syncing from. Should be set to the L1 message queue deployment block number.",
 	}
+	L1DisableMessageQueueV2Flag = &cli.BoolFlag{
+		Name:  "l1.disablemqv2",
+		Usage: "Disable L1 message queue v2",
+	}
 
 	// Circuit capacity check settings
 	CircuitCapacityCheckEnabledFlag = cli.BoolFlag{
@@ -877,21 +894,45 @@ var (
 	}
 
 	// DA syncing settings
-	DASyncEnabledFlag = &cli.BoolFlag{
+	DASyncEnabledFlag = cli.BoolFlag{
 		Name:  "da.sync",
 		Usage: "Enable node syncing from DA",
 	}
-	DABlobScanAPIEndpointFlag = &cli.StringFlag{
+	DABlobScanAPIEndpointFlag = cli.StringFlag{
 		Name:  "da.blob.blobscan",
 		Usage: "BlobScan blob API endpoint",
 	}
-	DABlockNativeAPIEndpointFlag = &cli.StringFlag{
+	DABlockNativeAPIEndpointFlag = cli.StringFlag{
 		Name:  "da.blob.blocknative",
 		Usage: "BlockNative blob API endpoint",
 	}
-	DABeaconNodeAPIEndpointFlag = &cli.StringFlag{
+	DABeaconNodeAPIEndpointFlag = cli.StringFlag{
 		Name:  "da.blob.beaconnode",
 		Usage: "Beacon node API endpoint",
+	}
+	DARecoveryModeFlag = cli.BoolFlag{
+		Name:  "da.recovery",
+		Usage: "Enable recovery mode for DA syncing",
+	}
+	DARecoveryInitialL1BlockFlag = cli.Uint64Flag{
+		Name:  "da.recovery.initiall1block",
+		Usage: "Initial L1 block to start recovery from",
+	}
+	DARecoveryInitialBatchFlag = cli.Uint64Flag{
+		Name:  "da.recovery.initialbatch",
+		Usage: "Initial batch to start recovery from",
+	}
+	DARecoverySignBlocksFlag = cli.BoolFlag{
+		Name:  "da.recovery.signblocks",
+		Usage: "Sign blocks during recovery (requires correct Clique signer key and history of blocks with Clique signatures)",
+	}
+	DARecoveryL2EndBlockFlag = cli.Uint64Flag{
+		Name:  "da.recovery.l2endblock",
+		Usage: "End L2 block to recover to",
+	}
+	DARecoveryProduceBlocksFlag = cli.BoolFlag{
+		Name:  "da.recovery.produceblocks",
+		Usage: "Produce unsigned blocks after L1 recovery for permissionless batch submission",
 	}
 )
 
@@ -1399,6 +1440,9 @@ func setL1(ctx *cli.Context, cfg *node.Config) {
 	if ctx.GlobalIsSet(L1DeploymentBlockFlag.Name) {
 		cfg.L1DeploymentBlock = ctx.GlobalUint64(L1DeploymentBlockFlag.Name)
 	}
+	if ctx.GlobalIsSet(L1DisableMessageQueueV2Flag.Name) {
+		cfg.L1DisableMessageQueueV2 = ctx.GlobalBool(L1DisableMessageQueueV2Flag.Name)
+	}
 }
 
 func setSmartCard(ctx *cli.Context, cfg *node.Config) {
@@ -1519,6 +1563,9 @@ func setTxPool(ctx *cli.Context, cfg *core.TxPoolConfig) {
 	if ctx.GlobalIsSet(TxPoolGlobalQueueFlag.Name) {
 		cfg.GlobalQueue = ctx.GlobalUint64(TxPoolGlobalQueueFlag.Name)
 	}
+	if ctx.GlobalIsSet(TxPoolAccountPendingLimitFlag.Name) {
+		cfg.AccountPendingLimit = ctx.GlobalUint64(TxPoolAccountPendingLimitFlag.Name)
+	}
 	if ctx.GlobalIsSet(TxPoolLifetimeFlag.Name) {
 		cfg.Lifetime = ctx.GlobalDuration(TxPoolLifetimeFlag.Name)
 	}
@@ -1577,6 +1624,9 @@ func setMiner(ctx *cli.Context, cfg *miner.Config) {
 	if ctx.GlobalIsSet(MinerMaxAccountsNumFlag.Name) {
 		cfg.MaxAccountsNum = ctx.GlobalInt(MinerMaxAccountsNumFlag.Name)
 	}
+	if ctx.GlobalIsSet(MinerAllowEmptyFlag.Name) {
+		cfg.AllowEmpty = ctx.GlobalBool(MinerAllowEmptyFlag.Name)
+	}
 	if ctx.GlobalIsSet(LegacyMinerGasTargetFlag.Name) {
 		log.Warn("The generic --miner.gastarget flag is deprecated and will be removed in the future!")
 	}
@@ -1629,15 +1679,33 @@ func setEnableRollupVerify(ctx *cli.Context, cfg *ethconfig.Config) {
 func setDA(ctx *cli.Context, cfg *ethconfig.Config) {
 	if ctx.IsSet(DASyncEnabledFlag.Name) {
 		cfg.EnableDASyncing = ctx.Bool(DASyncEnabledFlag.Name)
-		if ctx.IsSet(DABlobScanAPIEndpointFlag.Name) {
-			cfg.DA.BlobScanAPIEndpoint = ctx.String(DABlobScanAPIEndpointFlag.Name)
-		}
-		if ctx.IsSet(DABlockNativeAPIEndpointFlag.Name) {
-			cfg.DA.BlockNativeAPIEndpoint = ctx.String(DABlockNativeAPIEndpointFlag.Name)
-		}
-		if ctx.IsSet(DABeaconNodeAPIEndpointFlag.Name) {
-			cfg.DA.BeaconNodeAPIEndpoint = ctx.String(DABeaconNodeAPIEndpointFlag.Name)
-		}
+	}
+	if ctx.IsSet(DABlobScanAPIEndpointFlag.Name) {
+		cfg.DA.BlobScanAPIEndpoint = ctx.String(DABlobScanAPIEndpointFlag.Name)
+	}
+	if ctx.IsSet(DABlockNativeAPIEndpointFlag.Name) {
+		cfg.DA.BlockNativeAPIEndpoint = ctx.String(DABlockNativeAPIEndpointFlag.Name)
+	}
+	if ctx.IsSet(DABeaconNodeAPIEndpointFlag.Name) {
+		cfg.DA.BeaconNodeAPIEndpoint = ctx.String(DABeaconNodeAPIEndpointFlag.Name)
+	}
+	if ctx.IsSet(DARecoveryModeFlag.Name) {
+		cfg.DA.RecoveryMode = ctx.Bool(DARecoveryModeFlag.Name)
+	}
+	if ctx.IsSet(DARecoveryInitialL1BlockFlag.Name) {
+		cfg.DA.InitialL1Block = ctx.Uint64(DARecoveryInitialL1BlockFlag.Name)
+	}
+	if ctx.IsSet(DARecoveryInitialBatchFlag.Name) {
+		cfg.DA.InitialBatch = ctx.Uint64(DARecoveryInitialBatchFlag.Name)
+	}
+	if ctx.IsSet(DARecoverySignBlocksFlag.Name) {
+		cfg.DA.SignBlocks = ctx.Bool(DARecoverySignBlocksFlag.Name)
+	}
+	if ctx.IsSet(DARecoveryL2EndBlockFlag.Name) {
+		cfg.DA.L2EndBlock = ctx.Uint64(DARecoveryL2EndBlockFlag.Name)
+	}
+	if ctx.IsSet(DARecoveryProduceBlocksFlag.Name) {
+		cfg.DA.ProduceBlocks = ctx.Bool(DARecoveryProduceBlocksFlag.Name)
 	}
 }
 
@@ -1879,12 +1947,15 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 		stack.Config().L1Confirmations = rpc.FinalizedBlockNumber
 		log.Info("Setting flag", "--l1.sync.startblock", "4038000")
 		stack.Config().L1DeploymentBlock = 4038000
-		// disable pruning
-		if ctx.GlobalString(GCModeFlag.Name) != GCModeArchive {
-			log.Crit("Must use --gcmode=archive")
+		cfg.Genesis.Config.Scroll.UseZktrie = !ctx.GlobalBool(ScrollMPTFlag.Name)
+		if cfg.Genesis.Config.Scroll.UseZktrie {
+			// disable pruning
+			if ctx.GlobalString(GCModeFlag.Name) != GCModeArchive {
+				log.Crit("Must use --gcmode=archive")
+			}
+			log.Info("Pruning disabled")
+			cfg.NoPruning = true
 		}
-		log.Info("Pruning disabled")
-		cfg.NoPruning = true
 	case ctx.GlobalBool(ScrollFlag.Name):
 		if !ctx.GlobalIsSet(NetworkIdFlag.Name) {
 			cfg.NetworkId = 534352
@@ -1895,12 +1966,15 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 		stack.Config().L1Confirmations = rpc.FinalizedBlockNumber
 		log.Info("Setting flag", "--l1.sync.startblock", "18306000")
 		stack.Config().L1DeploymentBlock = 18306000
-		// disable pruning
-		if ctx.GlobalString(GCModeFlag.Name) != GCModeArchive {
-			log.Crit("Must use --gcmode=archive")
+		cfg.Genesis.Config.Scroll.UseZktrie = !ctx.GlobalBool(ScrollMPTFlag.Name)
+		if cfg.Genesis.Config.Scroll.UseZktrie {
+			// disable pruning
+			if ctx.GlobalString(GCModeFlag.Name) != GCModeArchive {
+				log.Crit("Must use --gcmode=archive")
+			}
+			log.Info("Pruning disabled")
+			cfg.NoPruning = true
 		}
-		log.Info("Pruning disabled")
-		cfg.NoPruning = true
 	case ctx.GlobalBool(DeveloperFlag.Name):
 		if !ctx.GlobalIsSet(NetworkIdFlag.Name) {
 			cfg.NetworkId = 1337
@@ -1981,16 +2055,6 @@ func SetDNSDiscoveryDefaults(cfg *ethconfig.Config, genesis common.Hash) {
 // The second return value is the full node instance, which may be nil if the
 // node is running as a light client.
 func RegisterEthService(stack *node.Node, cfg *ethconfig.Config) (ethapi.Backend, *eth.Ethereum) {
-	if cfg.SyncMode == downloader.LightSync {
-		backend, err := les.New(stack, cfg)
-		if err != nil {
-			Fatalf("Failed to register the Ethereum service: %v", err)
-		}
-		scrollTracerWrapper := tracing.NewTracerWrapper()
-		stack.RegisterAPIs(tracers.APIs(backend.ApiBackend, scrollTracerWrapper))
-		return backend.ApiBackend, nil
-	}
-
 	// initialize L1 client for sync service
 	// note: we need to do this here to avoid circular dependency
 	l1EndpointUrl := stack.Config().L1Endpoint
@@ -2004,6 +2068,16 @@ func RegisterEthService(stack *node.Node, cfg *ethconfig.Config) (ethapi.Backend
 		}
 
 		log.Info("Initialized L1 client", "endpoint", l1EndpointUrl)
+	}
+
+	if cfg.SyncMode == downloader.LightSync {
+		backend, err := les.New(stack, cfg, l1Client)
+		if err != nil {
+			Fatalf("Failed to register the Ethereum service: %v", err)
+		}
+		scrollTracerWrapper := tracing.NewTracerWrapper()
+		stack.RegisterAPIs(tracers.APIs(backend.ApiBackend, scrollTracerWrapper))
+		return backend.ApiBackend, nil
 	}
 
 	backend, err := eth.New(stack, cfg, l1Client)

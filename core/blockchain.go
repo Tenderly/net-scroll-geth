@@ -53,6 +53,7 @@ var (
 	headHeaderGauge    = metrics.NewRegisteredGauge("chain/head/header", nil)
 	headFastBlockGauge = metrics.NewRegisteredGauge("chain/head/receipt", nil)
 	headTimeGapGauge   = metrics.NewRegisteredGauge("chain/head/timegap", nil)
+	headL1MessageGauge = metrics.NewRegisteredGauge("chain/head/l1msg", nil)
 
 	l2BaseFeeGauge = metrics.NewRegisteredGauge("chain/fees/l2basefee", nil)
 
@@ -1253,6 +1254,17 @@ func (bc *BlockChain) writeBlockWithState(block *types.Block, receipts []*types.
 		l2BaseFeeGauge.Update(0)
 	}
 
+	// Note the latest relayed L1 message queue index (if any)
+	for _, tx := range block.Transactions() {
+		if msg := tx.AsL1MessageTx(); msg != nil {
+			// Queue index is guaranteed to fit into int64.
+			headL1MessageGauge.Update(int64(msg.QueueIndex))
+		} else {
+			// No more L1 messages in this block.
+			break
+		}
+	}
+
 	parent := bc.GetHeaderByHash(block.ParentHash())
 	// block.Time is guaranteed to be larger than parent.Time,
 	// and the time gap should fit into int64.
@@ -1318,6 +1330,9 @@ func (bc *BlockChain) writeBlockWithState(block *types.Block, receipts []*types.
 		return NonStatTy, err
 	}
 	triedb := bc.stateCache.TrieDB()
+	if block.Root() != root {
+		rawdb.WriteDiskStateRoot(bc.db, block.Root(), root)
+	}
 
 	// If we're running an archive node, always flush
 	if bc.cacheConfig.TrieDirtyDisabled {
@@ -1504,7 +1519,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals bool) (int, er
 	}
 
 	// Start a parallel signature recovery (signer will fluke on fork transition, minimal perf loss)
-	senderCacher.recoverFromBlocks(types.MakeSigner(bc.chainConfig, chain[0].Number()), chain)
+	senderCacher.recoverFromBlocks(types.MakeSigner(bc.chainConfig, chain[0].Number(), chain[0].Time()), chain)
 
 	var (
 		stats     = insertStats{startTime: mclock.Now()}
@@ -1677,7 +1692,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals bool) (int, er
 		}
 
 		// Enable prefetching to pull in trie node paths while processing transactions
-		statedb.StartPrefetcher("chain")
+		statedb.StartPrefetcher("chain", nil)
 		activeState = statedb
 
 		// If we have a followup block, run that against the current state to pre-cache
@@ -1803,18 +1818,18 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals bool) (int, er
 	return it.index, err
 }
 
-func (bc *BlockChain) BuildAndWriteBlock(parentBlock *types.Block, header *types.Header, txs types.Transactions) (WriteStatus, error) {
+func (bc *BlockChain) BuildAndWriteBlock(parentBlock *types.Block, header *types.Header, txs types.Transactions, sign bool) (*types.Block, WriteStatus, error) {
 	if !bc.chainmu.TryLock() {
-		return NonStatTy, errInsertionInterrupted
+		return nil, NonStatTy, errInsertionInterrupted
 	}
 	defer bc.chainmu.Unlock()
 
 	statedb, err := state.New(parentBlock.Root(), bc.stateCache, bc.snaps)
 	if err != nil {
-		return NonStatTy, err
+		return nil, NonStatTy, err
 	}
 
-	statedb.StartPrefetcher("l1sync")
+	statedb.StartPrefetcher("l1sync", nil)
 	defer statedb.StopPrefetcher()
 
 	header.ParentHash = parentBlock.Hash()
@@ -1822,17 +1837,47 @@ func (bc *BlockChain) BuildAndWriteBlock(parentBlock *types.Block, header *types
 	tempBlock := types.NewBlockWithHeader(header).WithBody(txs, nil)
 	receipts, logs, gasUsed, err := bc.processor.Process(tempBlock, statedb, bc.vmConfig)
 	if err != nil {
-		return NonStatTy, fmt.Errorf("error processing block: %w", err)
+		return nil, NonStatTy, fmt.Errorf("error processing block: %w", err)
 	}
 
 	// TODO: once we have the extra and difficulty we need to verify the signature of the block with Clique
 	//  This should be done with https://github.com/scroll-tech/go-ethereum/pull/913.
 
-	// finalize and assemble block as fullBlock
+	if sign {
+		// Prevent Engine from overriding timestamp.
+		originalTime := header.Time
+
+		err = bc.engine.Prepare(bc, header, &originalTime)
+		if err != nil {
+			return nil, NonStatTy, fmt.Errorf("error preparing block %d: %w", tempBlock.Number().Uint64(), err)
+		}
+	}
+
+	// finalize and assemble block as fullBlock: replicates consensus.FinalizeAndAssemble()
 	header.GasUsed = gasUsed
 	header.Root = statedb.IntermediateRoot(bc.chainConfig.IsEIP158(header.Number))
 
 	fullBlock := types.NewBlock(header, txs, nil, receipts, trie.NewStackTrie(nil))
+
+	// Sign the block if requested
+	if sign {
+		resultCh, stopCh := make(chan *types.Block), make(chan struct{})
+		if err = bc.engine.Seal(bc, fullBlock, resultCh, stopCh); err != nil {
+			return nil, NonStatTy, fmt.Errorf("error sealing block %d: %w", fullBlock.Number().Uint64(), err)
+		}
+		// Clique.Seal() will only wait for a second before giving up on us. So make sure there is nothing computational heavy
+		// or a call that blocks between the call to Seal and the line below. Seal might introduce some delay, so we keep track of
+		// that artificially added delay and subtract it from overall runtime of commit().
+		fullBlock = <-resultCh
+		if fullBlock == nil {
+			return nil, NonStatTy, fmt.Errorf("sealing block failed %d: block is nil", header.Number.Uint64())
+		}
+
+		// verify the generated block with local consensus engine to make sure everything is as expected
+		if err = bc.engine.VerifyHeader(bc, fullBlock.Header(), true); err != nil {
+			return nil, NonStatTy, fmt.Errorf("error verifying signed block %d: %w", fullBlock.Number().Uint64(), err)
+		}
+	}
 
 	blockHash := fullBlock.Hash()
 	// manually replace the block hash in the receipts
@@ -1850,7 +1895,20 @@ func (bc *BlockChain) BuildAndWriteBlock(parentBlock *types.Block, header *types
 		l.BlockHash = blockHash
 	}
 
-	return bc.writeBlockWithState(fullBlock, receipts, logs, statedb, false)
+	// Make sure the block body is valid e.g. ordering of L1 messages is correct and continuous.
+	if err = bc.validator.ValidateBody(fullBlock); err != nil {
+		bc.reportBlock(fullBlock, receipts, err)
+		return nil, NonStatTy, fmt.Errorf("error validating block body %d: %w", fullBlock.Number().Uint64(), err)
+	}
+
+	// Double check: even though we just built the block, make sure it is valid.
+	if err = bc.validator.ValidateState(fullBlock, statedb, receipts, gasUsed); err != nil {
+		bc.reportBlock(fullBlock, receipts, err)
+		return nil, NonStatTy, fmt.Errorf("error validating block %d: %w", fullBlock.Number().Uint64(), err)
+	}
+
+	writeStatus, err := bc.writeBlockWithState(fullBlock, receipts, logs, statedb, false)
+	return fullBlock, writeStatus, err
 }
 
 // insertSideChain is called when an import batch hits upon a pruned ancestor
