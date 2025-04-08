@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/scroll-tech/da-codec/encoding"
-
 	"github.com/scroll-tech/go-ethereum/common"
 	"github.com/scroll-tech/go-ethereum/ethdb"
 	"github.com/scroll-tech/go-ethereum/log"
@@ -161,7 +159,7 @@ func ReadLastFinalizedBatchIndex(db ethdb.Reader) *uint64 {
 // WriteCommittedBatchMeta stores the CommittedBatchMeta for a specific batch in the database.
 func WriteCommittedBatchMeta(db ethdb.KeyValueWriter, batchIndex uint64, committedBatchMeta *CommittedBatchMeta) {
 	var committedBatchMetaToStore any
-	if encoding.CodecVersion(committedBatchMeta.Version) < encoding.CodecV7 {
+	if committedBatchMeta.Version < 7 {
 		committedBatchMetaToStore = &committedBatchMetaV0{
 			Version:          committedBatchMeta.Version,
 			ChunkBlockRanges: committedBatchMeta.ChunkBlockRanges,
@@ -196,7 +194,7 @@ func ReadCommittedBatchMeta(db ethdb.Reader, batchIndex uint64) (*CommittedBatch
 	// Try decoding from the newest format for future proofness, then the older one for old data.
 	cbm7 := new(committedBatchMetaV7)
 	if err = rlp.Decode(bytes.NewReader(data), cbm7); err == nil {
-		if encoding.CodecVersion(cbm7.Version) < encoding.CodecV7 {
+		if cbm7.Version < 7 {
 			return nil, fmt.Errorf("unexpected committed batch metadata version: batch index %d, version %d", batchIndex, cbm7.Version)
 		}
 		return &CommittedBatchMeta{
