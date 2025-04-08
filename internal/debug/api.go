@@ -37,7 +37,7 @@ import (
 
 	"github.com/hashicorp/go-bexpr"
 
-	"github.com/scroll-tech/go-ethereum/log"
+	"github.com/tenderly/net-scroll-geth/log"
 )
 
 // Handler is the global debugging handler.

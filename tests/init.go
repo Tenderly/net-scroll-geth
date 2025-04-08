@@ -21,7 +21,7 @@ import (
 	"math/big"
 	"sort"
 
-	"github.com/scroll-tech/go-ethereum/params"
+	"github.com/tenderly/net-scroll-geth/params"
 )
 
 // Forks table defines supported forks and their chain config.

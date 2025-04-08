@@ -20,7 +20,7 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/scroll-tech/go-ethereum/les/utils"
+	"github.com/tenderly/net-scroll-geth/les/utils"
 )
 
 func checkU64(t *testing.T, name string, value, exp uint64) {

@@ -17,7 +17,7 @@
 package state
 
 import (
-	"github.com/scroll-tech/go-ethereum/common"
+	"github.com/tenderly/net-scroll-geth/common"
 )
 
 // transientStorage is a representation of EIP-1153 "Transient Storage".

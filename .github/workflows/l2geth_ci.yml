@@ -100,7 +100,7 @@ jobs:
       with:
         persist-credentials: false
 
-    - run: goimports -local github.com/scroll-tech/go-ethereum/ -w .
+    - run: goimports -local github.com/tenderly/net-scroll-geth/ -w .
 
     # If there are any diffs from goimports, fail.
     - name: Verify no changes from goimports

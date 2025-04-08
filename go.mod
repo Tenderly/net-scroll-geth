@@ -1,4 +1,4 @@
-module github.com/scroll-tech/go-ethereum
+module github.com/tenderly/net-scroll-geth
 
 go 1.21
 

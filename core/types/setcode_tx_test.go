@@ -19,7 +19,7 @@ package types
 import (
 	"testing"
 
-	"github.com/scroll-tech/go-ethereum/common"
+	"github.com/tenderly/net-scroll-geth/common"
 )
 
 // TestParseDelegation tests a few possible delegation designator values and

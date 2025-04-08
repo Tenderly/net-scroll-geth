@@ -1,7 +1,7 @@
 package system_contract
 
 import (
-	"github.com/scroll-tech/go-ethereum/common"
+	"github.com/tenderly/net-scroll-geth/common"
 )
 
 // API is a user facing RPC API to allow controlling the signer and voting
