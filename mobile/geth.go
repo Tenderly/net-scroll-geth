@@ -24,17 +24,17 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/scroll-tech/go-ethereum/core"
-	"github.com/scroll-tech/go-ethereum/eth/downloader"
-	"github.com/scroll-tech/go-ethereum/eth/ethconfig"
-	"github.com/scroll-tech/go-ethereum/ethclient"
-	"github.com/scroll-tech/go-ethereum/ethstats"
-	"github.com/scroll-tech/go-ethereum/internal/debug"
-	"github.com/scroll-tech/go-ethereum/les"
-	"github.com/scroll-tech/go-ethereum/node"
-	"github.com/scroll-tech/go-ethereum/p2p"
-	"github.com/scroll-tech/go-ethereum/p2p/nat"
-	"github.com/scroll-tech/go-ethereum/params"
+	"github.com/tenderly/net-scroll-geth/core"
+	"github.com/tenderly/net-scroll-geth/eth/downloader"
+	"github.com/tenderly/net-scroll-geth/eth/ethconfig"
+	"github.com/tenderly/net-scroll-geth/ethclient"
+	"github.com/tenderly/net-scroll-geth/ethstats"
+	"github.com/tenderly/net-scroll-geth/internal/debug"
+	"github.com/tenderly/net-scroll-geth/les"
+	"github.com/tenderly/net-scroll-geth/node"
+	"github.com/tenderly/net-scroll-geth/p2p"
+	"github.com/tenderly/net-scroll-geth/p2p/nat"
+	"github.com/tenderly/net-scroll-geth/params"
 )
 
 // NodeConfig represents the collection of configuration values to fine tune the Geth

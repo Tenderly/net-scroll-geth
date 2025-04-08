@@ -39,7 +39,7 @@ package native
 import (
 	"errors"
 
-	"github.com/scroll-tech/go-ethereum/eth/tracers"
+	"github.com/tenderly/net-scroll-geth/eth/tracers"
 )
 
 // init registers itself this packages as a lookup for tracers.

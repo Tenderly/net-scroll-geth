@@ -19,7 +19,7 @@ package event_test
 import (
 	"fmt"
 
-	"github.com/scroll-tech/go-ethereum/event"
+	"github.com/tenderly/net-scroll-geth/event"
 )
 
 func ExampleFeed_acknowledgedEvents() {

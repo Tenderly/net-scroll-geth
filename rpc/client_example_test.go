@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/common/hexutil"
-	"github.com/scroll-tech/go-ethereum/rpc"
+	"github.com/tenderly/net-scroll-geth/common/hexutil"
+	"github.com/tenderly/net-scroll-geth/rpc"
 )
 
 // In this example, our client wishes to track the latest 'block number'

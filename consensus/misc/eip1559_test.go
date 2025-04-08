@@ -20,8 +20,8 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/params"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/params"
 )
 
 // copyConfig does a _shallow_ copy of a given config. Safe to set new values, but

@@ -23,12 +23,12 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/crypto"
-	"github.com/scroll-tech/go-ethereum/crypto/codehash"
-	"github.com/scroll-tech/go-ethereum/metrics"
-	"github.com/scroll-tech/go-ethereum/rlp"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/crypto"
+	"github.com/tenderly/net-scroll-geth/crypto/codehash"
+	"github.com/tenderly/net-scroll-geth/metrics"
+	"github.com/tenderly/net-scroll-geth/rlp"
 )
 
 var emptyPoseidonCodeHash = codehash.EmptyPoseidonCodeHash.Bytes()

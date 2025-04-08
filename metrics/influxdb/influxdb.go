@@ -7,8 +7,8 @@ import (
 
 	"github.com/influxdata/influxdb/client"
 
-	"github.com/scroll-tech/go-ethereum/log"
-	"github.com/scroll-tech/go-ethereum/metrics"
+	"github.com/tenderly/net-scroll-geth/log"
+	"github.com/tenderly/net-scroll-geth/metrics"
 )
 
 type reporter struct {
