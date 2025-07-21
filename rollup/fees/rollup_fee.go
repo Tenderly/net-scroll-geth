@@ -7,12 +7,9 @@ import (
 	"math/big"
 
 	"github.com/holiman/uint256"
-	"github.com/scroll-tech/da-codec/encoding"
-
 	"github.com/scroll-tech/go-ethereum/common"
 	"github.com/scroll-tech/go-ethereum/core/types"
 	"github.com/scroll-tech/go-ethereum/crypto"
-	"github.com/scroll-tech/go-ethereum/log"
 	"github.com/scroll-tech/go-ethereum/params"
 	"github.com/scroll-tech/go-ethereum/rollup/rcfg"
 )
@@ -178,36 +175,36 @@ func readGPOStorageSlots(addr common.Address, state StateDB) gpoState {
 // compression_ratio(tx) = size(tx) * PRECISION / size(zstd(tx))
 func estimateTxCompressionRatio(data []byte, blockNumber uint64, blockTime uint64, config *params.ChainConfig) (*big.Int, error) {
 	// By definition, the compression ratio of empty data is infinity
-	if len(data) == 0 {
-		return U256MAX, nil
-	}
+	//if len(data) == 0 {
+	return U256MAX, nil
+	//}
 
-	// Compress data using da-codec
-	compressed, err := encoding.CompressScrollBatchBytes(data, blockNumber, blockTime, config)
-	if err != nil {
-		log.Error("Batch compression failed, using 1.0 compression ratio", "error", err, "data size", len(data), "data", common.Bytes2Hex(data))
-		return nil, fmt.Errorf("batch compression failed: %w", err)
-	}
-
-	if len(compressed) == 0 {
-		log.Error("Compressed data is empty, using 1.0 compression ratio", "data size", len(data), "data", common.Bytes2Hex(data))
-		return nil, fmt.Errorf("compressed data is empty")
-	}
-
-	// Make sure compression ratio >= 1 by checking if compressed data is bigger or equal to original data
-	// This behavior is consistent with DA Batch compression in codecv7 and later versions
-	if len(compressed) >= len(data) {
-		return rcfg.Precision, nil
-	}
-
-	// compression_ratio = size(tx) * PRECISION / size(zstd(tx))
-	originalSize := new(big.Int).SetUint64(uint64(len(data)))
-	compressedSize := new(big.Int).SetUint64(uint64(len(compressed)))
-
-	ratio := new(big.Int).Mul(originalSize, rcfg.Precision)
-	ratio.Div(ratio, compressedSize)
-
-	return ratio, nil
+	//// Compress data using da-codec
+	//compressed, err := encoding.CompressScrollBatchBytes(data, blockNumber, blockTime, config)
+	//if err != nil {
+	//	log.Error("Batch compression failed, using 1.0 compression ratio", "error", err, "data size", len(data), "data", common.Bytes2Hex(data))
+	//	return nil, fmt.Errorf("batch compression failed: %w", err)
+	//}
+	//
+	//if len(compressed) == 0 {
+	//	log.Error("Compressed data is empty, using 1.0 compression ratio", "data size", len(data), "data", common.Bytes2Hex(data))
+	//	return nil, fmt.Errorf("compressed data is empty")
+	//}
+	//
+	//// Make sure compression ratio >= 1 by checking if compressed data is bigger or equal to original data
+	//// This behavior is consistent with DA Batch compression in codecv7 and later versions
+	//if len(compressed) >= len(data) {
+	//	return rcfg.Precision, nil
+	//}
+	//
+	//// compression_ratio = size(tx) * PRECISION / size(zstd(tx))
+	//originalSize := new(big.Int).SetUint64(uint64(len(data)))
+	//compressedSize := new(big.Int).SetUint64(uint64(len(compressed)))
+	//
+	//ratio := new(big.Int).Mul(originalSize, rcfg.Precision)
+	//ratio.Div(ratio, compressedSize)
+	//
+	//return ratio, nil
 }
 
 // calculatePenalty computes the penalty multiplier based on compression ratio
