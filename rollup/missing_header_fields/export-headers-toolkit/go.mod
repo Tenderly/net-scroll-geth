@@ -1,12 +1,12 @@
-module github.com/scroll-tech/go-ethereum/export-headers-toolkit
+module github.com/tenderly/net-scroll-geth/export-headers-toolkit
 
 go 1.22
 
-replace github.com/scroll-tech/go-ethereum => ../../..
+replace github.com/tenderly/net-scroll-geth => ../../..
 
 require (
 	github.com/scroll-tech/da-codec v0.1.3-0.20250313120912-344f2d5e33e1
-	github.com/scroll-tech/go-ethereum v1.10.14-0.20250305151038-478940e79601
+	github.com/tenderly/net-scroll-geth v1.10.14-0.20250305151038-478940e79601
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	gorm.io/driver/postgres v1.5.7

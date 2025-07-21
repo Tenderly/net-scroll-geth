@@ -19,7 +19,7 @@ package bitutil
 import (
 	"bytes"
 
-	"github.com/scroll-tech/go-ethereum/common/bitutil"
+	"github.com/tenderly/net-scroll-geth/common/bitutil"
 )
 
 // Fuzz implements a go-fuzz fuzzer method to test various encoding method

@@ -20,7 +20,7 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/scroll-tech/go-ethereum/common"
+	"github.com/tenderly/net-scroll-geth/common"
 )
 
 func bigFromHex(hex string) *big.Int {

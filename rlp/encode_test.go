@@ -27,7 +27,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/scroll-tech/go-ethereum/common/math"
+	"github.com/tenderly/net-scroll-geth/common/math"
 )
 
 type testEncoder struct {

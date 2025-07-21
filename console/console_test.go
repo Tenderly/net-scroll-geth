@@ -26,15 +26,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/consensus/ethash"
-	"github.com/scroll-tech/go-ethereum/console/prompt"
-	"github.com/scroll-tech/go-ethereum/core"
-	"github.com/scroll-tech/go-ethereum/eth"
-	"github.com/scroll-tech/go-ethereum/eth/ethconfig"
-	"github.com/scroll-tech/go-ethereum/internal/jsre"
-	"github.com/scroll-tech/go-ethereum/miner"
-	"github.com/scroll-tech/go-ethereum/node"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/consensus/ethash"
+	"github.com/tenderly/net-scroll-geth/console/prompt"
+	"github.com/tenderly/net-scroll-geth/core"
+	"github.com/tenderly/net-scroll-geth/eth"
+	"github.com/tenderly/net-scroll-geth/eth/ethconfig"
+	"github.com/tenderly/net-scroll-geth/internal/jsre"
+	"github.com/tenderly/net-scroll-geth/miner"
+	"github.com/tenderly/net-scroll-geth/node"
 )
 
 const (

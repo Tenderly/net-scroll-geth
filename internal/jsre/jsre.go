@@ -28,7 +28,7 @@ import (
 
 	"github.com/dop251/goja"
 
-	"github.com/scroll-tech/go-ethereum/common"
+	"github.com/tenderly/net-scroll-geth/common"
 )
 
 // JSRE is a JS runtime environment embedding the goja interpreter.

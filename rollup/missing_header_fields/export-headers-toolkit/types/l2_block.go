@@ -9,7 +9,7 @@ import (
 	"github.com/scroll-tech/da-codec/encoding"
 	"gorm.io/gorm"
 
-	"github.com/scroll-tech/go-ethereum/core/types"
+	"github.com/tenderly/net-scroll-geth/core/types"
 )
 
 // L2Block represents a l2 block in the database.

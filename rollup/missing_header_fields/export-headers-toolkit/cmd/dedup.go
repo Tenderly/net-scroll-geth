@@ -14,10 +14,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	coreTypes "github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/export-headers-toolkit/types"
-	"github.com/scroll-tech/go-ethereum/rollup/missing_header_fields"
+	"github.com/tenderly/net-scroll-geth/common"
+	coreTypes "github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/export-headers-toolkit/types"
+	"github.com/tenderly/net-scroll-geth/rollup/missing_header_fields"
 )
 
 // dedupCmd represents the dedup command

@@ -19,7 +19,7 @@ package bloombits
 import (
 	"errors"
 
-	"github.com/scroll-tech/go-ethereum/core/types"
+	"github.com/tenderly/net-scroll-geth/core/types"
 )
 
 var (

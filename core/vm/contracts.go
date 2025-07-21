@@ -22,14 +22,14 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/common/math"
-	"github.com/scroll-tech/go-ethereum/crypto"
-	"github.com/scroll-tech/go-ethereum/crypto/blake2b"
-	"github.com/scroll-tech/go-ethereum/crypto/bls12381"
-	"github.com/scroll-tech/go-ethereum/crypto/bn256"
-	"github.com/scroll-tech/go-ethereum/crypto/secp256r1"
-	"github.com/scroll-tech/go-ethereum/params"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/common/math"
+	"github.com/tenderly/net-scroll-geth/crypto"
+	"github.com/tenderly/net-scroll-geth/crypto/blake2b"
+	"github.com/tenderly/net-scroll-geth/crypto/bls12381"
+	"github.com/tenderly/net-scroll-geth/crypto/bn256"
+	"github.com/tenderly/net-scroll-geth/crypto/secp256r1"
+	"github.com/tenderly/net-scroll-geth/params"
 
 	//lint:ignore SA1019 Needed for precompile
 	"golang.org/x/crypto/ripemd160"

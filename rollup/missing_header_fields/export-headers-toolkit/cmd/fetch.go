@@ -17,9 +17,9 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"github.com/scroll-tech/go-ethereum/ethclient"
+	"github.com/tenderly/net-scroll-geth/ethclient"
 
-	"github.com/scroll-tech/go-ethereum/export-headers-toolkit/types"
+	"github.com/tenderly/net-scroll-geth/export-headers-toolkit/types"
 )
 
 var fetchCmd = &cobra.Command{

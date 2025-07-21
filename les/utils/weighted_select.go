@@ -20,7 +20,7 @@ import (
 	"math"
 	"math/rand"
 
-	"github.com/scroll-tech/go-ethereum/log"
+	"github.com/tenderly/net-scroll-geth/log"
 )
 
 type (
