@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/scroll-tech/da-codec/encoding"
-
 	"github.com/scroll-tech/go-ethereum"
 	"github.com/scroll-tech/go-ethereum/accounts/abi"
 	"github.com/scroll-tech/go-ethereum/common"
@@ -427,19 +425,19 @@ func (r *Reader) FetchCommitTxData(commitEvent *CommitBatchEvent) (*CommitBatchA
 
 		// in commitAndFinalizeBatch, the last batch hash is encoded in the finalize struct as this is the only batch we're
 		// committing when calling this function.
-		codec, err := encoding.CodecFromVersion(encoding.CodecVersion(commitAndFinalizeArgs.Version))
-		if err != nil {
-			return nil, fmt.Errorf("failed to get codec from version %d, err: %w", commitAndFinalizeArgs.Version, err)
-		}
-		daBatch, err := codec.NewDABatchFromBytes(commitAndFinalizeArgs.FinalizeStruct.BatchHeader)
-		if err != nil {
-			return nil, fmt.Errorf("failed to decode daBatch from bytes, err: %w", err)
-		}
+		//codec, err := encoding.CodecFromVersion(encoding.CodecVersion(commitAndFinalizeArgs.Version))
+		//if err != nil {
+		//	return nil, fmt.Errorf("failed to get codec from version %d, err: %w", commitAndFinalizeArgs.Version, err)
+		//}
+		//daBatch, err := codec.NewDABatchFromBytes(commitAndFinalizeArgs.FinalizeStruct.BatchHeader)
+		//if err != nil {
+		//	return nil, fmt.Errorf("failed to decode daBatch from bytes, err: %w", err)
+		//}
 
 		args = &CommitBatchArgs{
 			Version:         commitAndFinalizeArgs.Version,
 			ParentBatchHash: commitAndFinalizeArgs.ParentBatchHash,
-			LastBatchHash:   daBatch.Hash(),
+			//LastBatchHash:   daBatch.Hash(),
 		}
 	} else {
 		return nil, fmt.Errorf("unknown method name for commit transaction: %s", method.Name)
