@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/scroll-tech/da-codec/encoding"
+	"github.com/tenderly/net-scroll-geth/da-codec/encoding"
 
 	"github.com/tenderly/net-scroll-geth/common"
 	"github.com/tenderly/net-scroll-geth/core"

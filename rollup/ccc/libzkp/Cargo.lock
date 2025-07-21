@@ -1005,7 +1005,7 @@ dependencies = [
 [[package]]
 name = "encoder"
 version = "0.1.0"
-source = "git+https://github.com/scroll-tech/da-codec.git?tag=v0.1.0#5a28b752d4504bf0966734fe4a6a5433981c74c2"
+source = "git+https://github.com/tenderly/net-scroll-geth/da-codec.git?tag=v0.1.0#5a28b752d4504bf0966734fe4a6a5433981c74c2"
 dependencies = [
  "zstd",
 ]

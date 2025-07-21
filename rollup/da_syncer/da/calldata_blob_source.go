@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/scroll-tech/da-codec/encoding"
+	"github.com/tenderly/net-scroll-geth/da-codec/encoding"
 
 	"github.com/tenderly/net-scroll-geth/accounts/abi"
 	"github.com/tenderly/net-scroll-geth/common"

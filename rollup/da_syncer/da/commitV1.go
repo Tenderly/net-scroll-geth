@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 
-	"github.com/scroll-tech/da-codec/encoding"
+	"github.com/tenderly/net-scroll-geth/da-codec/encoding"
 
 	"github.com/tenderly/net-scroll-geth/rollup/da_syncer/blob_client"
 	"github.com/tenderly/net-scroll-geth/rollup/l1"

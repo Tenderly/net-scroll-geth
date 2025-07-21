@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/scroll-tech/da-codec/encoding"
+	"github.com/tenderly/net-scroll-geth/da-codec/encoding"
 	"gorm.io/gorm"
 
 	"github.com/tenderly/net-scroll-geth/core/types"

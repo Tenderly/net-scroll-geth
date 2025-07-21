@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 
-	"github.com/scroll-tech/da-codec/encoding"
+	"github.com/tenderly/net-scroll-geth/da-codec/encoding"
 
 	"github.com/tenderly/net-scroll-geth/core/rawdb"
 	"github.com/tenderly/net-scroll-geth/core/types"

@@ -3,7 +3,7 @@ package da
 import (
 	"math/big"
 
-	"github.com/scroll-tech/da-codec/encoding"
+	"github.com/tenderly/net-scroll-geth/da-codec/encoding"
 
 	"github.com/tenderly/net-scroll-geth/common"
 	"github.com/tenderly/net-scroll-geth/core/types"
