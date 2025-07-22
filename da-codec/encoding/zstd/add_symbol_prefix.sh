@@ -24,15 +24,17 @@ for lib_info in "${LIBRARIES[@]}"; do
     REDEFINE_FILE="redefine_${LIB_FILE%.*}.syms"
 
     echo "Processing $LIB_FILE with prefix '$PREFIX'"
-    
+
     # Check if library file exists
     if [ ! -f "$LIB_FILE" ]; then
         echo "Warning: Library file not found: $LIB_FILE, skipping..."
         continue
     fi
 
-    # Check if library is already processed by looking for our prefix
-    if "$LLVM_NM" "$LIB_FILE" 2>/dev/null | grep -q "${PREFIX}"; then
+    # Force processing for standard encoder if requested
+    if [[ "$FORCE_PROCESS_STANDARD" == "1" && "$LIB_FILE" == *"standard"* ]]; then
+        echo "Force processing $LIB_FILE with prefix '$PREFIX'"
+    elif "$LLVM_NM" "$LIB_FILE" 2>/dev/null | grep -q "${PREFIX}"; then
         echo "Library $LIB_FILE already processed (found ${PREFIX} symbols), skipping..."
         continue
     fi
@@ -66,22 +68,35 @@ for lib_info in "${LIBRARIES[@]}"; do
                 $3 == "_g_debuglevel" ||
                 $3 == "divbwt" ||
                 $3 == "ERR_getErrorString" ||
-                $3 == "init_cpu_features_resolver") {
+                $3 == "init_cpu_features_resolver" ||
+                $3 == "___rust_start_panic" ||
+                $3 == "___rg_oom" ||
+                $3 == "___rust_foreign_exception" ||
+                $3 == "___rust_drop_panic" ||
+                $3 == "___rdl_alloc" ||
+                $3 == "_rust_begin_unwind" ||
+                $3 == "___rdl_dealloc" ||
+                $3 == "___rdl_oom" ||
+                $3 == "___rdl_realloc" ||
+                $3 == "_rust_panic" ||
+                $3 == "_rust_eh_personality" ||
+                $3 == "___rdl_alloc_zeroed" ||
+                $3 == "___rust_panic_cleanup") {
                 print $3 " '"$PREFIX"'" $3
             }
         }
     }
     ' | sort | uniq > "$REDEFINE_FILE"
-    
+
     # Check if there are symbols to redefine
     if [ ! -s "$REDEFINE_FILE" ]; then
         echo "No symbols found to redefine in $LIB_FILE"
         rm -f "$REDEFINE_FILE"
         continue
     fi
-    
+
     echo "Found $(wc -l < "$REDEFINE_FILE") symbols to redefine in $LIB_FILE"
-    
+
     # Show sample symbols being renamed
     echo "Sample symbols to be renamed:"
     head -3 "$REDEFINE_FILE" | while read old new; do
@@ -90,11 +105,11 @@ for lib_info in "${LIBRARIES[@]}"; do
 
     # Use llvm-objcopy to modify symbols
     "$LLVM_OBJCOPY" --redefine-syms="$REDEFINE_FILE" "$LIB_FILE" "${LIB_FILE%.*}_new.a"
-    
+
     # Move the new file to replace the original and clean up
     mv "${LIB_FILE%.*}_new.a" "$LIB_FILE"
     rm "$REDEFINE_FILE"
-    
+
     echo "Successfully processed $LIB_FILE"
     echo
 done
@@ -141,10 +156,10 @@ architectures=("darwin_arm64" "linux_amd64" "linux_arm64")
 total_conflicts=0
 for arch in "${architectures[@]}"; do
     echo "  Architecture: $arch"
-    
+
     # Create temp file for this architecture
     arch_temp_file=$(mktemp)
-    
+
     # Collect symbols for this architecture only
     for lib_info in "${LIBRARIES[@]}"; do
         IFS=':' read -r LIB_FILE PREFIX <<< "$lib_info"

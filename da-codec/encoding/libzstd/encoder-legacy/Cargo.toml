@@ -10,3 +10,9 @@ crate-type = ["staticlib"]
 
 [dependencies]
 zstd = { git = "https://github.com/scroll-tech/zstd-rs", branch = "hack/mul-block", features = ["experimental"] }
+
+[profile.release]
+panic = "abort"
+
+# Use build script to configure symbol prefixing
+[build-dependencies]

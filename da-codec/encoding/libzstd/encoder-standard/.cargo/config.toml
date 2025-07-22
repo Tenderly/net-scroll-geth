@@ -1,0 +1,16 @@
+[build]
+rustflags = [
+    "-C", "link-arg=-Wl,-alias,___rg_oom,_scroll_standard____rg_oom",
+    "-C", "link-arg=-Wl,-alias,___rust_foreign_exception,_scroll_standard____rust_foreign_exception", 
+    "-C", "link-arg=-Wl,-alias,___rust_drop_panic,_scroll_standard____rust_drop_panic",
+    "-C", "link-arg=-Wl,-alias,___rdl_alloc,_scroll_standard____rdl_alloc",
+    "-C", "link-arg=-Wl,-alias,_rust_begin_unwind,_scroll_standard__rust_begin_unwind",
+    "-C", "link-arg=-Wl,-alias,___rdl_dealloc,_scroll_standard____rdl_dealloc",
+    "-C", "link-arg=-Wl,-alias,___rdl_oom,_scroll_standard____rdl_oom", 
+    "-C", "link-arg=-Wl,-alias,___rdl_realloc,_scroll_standard____rdl_realloc",
+    "-C", "link-arg=-Wl,-alias,_rust_panic,_scroll_standard__rust_panic",
+    "-C", "link-arg=-Wl,-alias,_rust_eh_personality,_scroll_standard__rust_eh_personality",
+    "-C", "link-arg=-Wl,-alias,___rdl_alloc_zeroed,_scroll_standard____rdl_alloc_zeroed",
+    "-C", "link-arg=-Wl,-alias,___rust_start_panic,_scroll_standard____rust_start_panic",
+    "-C", "link-arg=-Wl,-alias,___rust_panic_cleanup,_scroll_standard____rust_panic_cleanup"
+]

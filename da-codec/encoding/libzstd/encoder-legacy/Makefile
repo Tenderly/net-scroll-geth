@@ -39,6 +39,16 @@ install: build
 	@echo "Installing legacy library to $(TARGET_DIR)..."
 	cp target/release/libencoder_legacy.a $(TARGET_DIR)/libencoder_legacy_$(PLATFORM).a
 ifeq ($(UNAME_S),Darwin)
+	@echo "Prefixing symbols with scroll_legacy_..."
+	# Create symbol redefine file for Rust runtime symbols
+	/opt/homebrew/opt/llvm/bin/llvm-nm $(TARGET_DIR)/libencoder_legacy_$(PLATFORM).a | \
+	awk '/^[0-9a-fA-F]+ [TDBS] / { if ($$3 ~ /^(_rust_|___r[dg]l_)/ || $$3 == "___rust_foreign_exception" || $$3 == "___rust_drop_panic" || $$3 == "___rust_panic_cleanup") print $$3 " scroll_legacy_" $$3 }' > redefine_legacy.syms
+	# Apply symbol prefixing
+	if [ -s redefine_legacy.syms ]; then \
+		/opt/homebrew/opt/llvm/bin/llvm-objcopy --redefine-syms=redefine_legacy.syms $(TARGET_DIR)/libencoder_legacy_$(PLATFORM).a $(TARGET_DIR)/libencoder_legacy_$(PLATFORM)_new.a && \
+		mv $(TARGET_DIR)/libencoder_legacy_$(PLATFORM)_new.a $(TARGET_DIR)/libencoder_legacy_$(PLATFORM).a; \
+	fi
+	rm -f redefine_legacy.syms
 	@echo "Fixing library symbol table..."
 	ranlib $(TARGET_DIR)/libencoder_legacy_$(PLATFORM).a
 endif
