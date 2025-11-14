@@ -4,11 +4,10 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/scroll-tech/da-codec/encoding"
-
 	"github.com/scroll-tech/go-ethereum/common"
 	"github.com/scroll-tech/go-ethereum/core/rawdb"
 	"github.com/scroll-tech/go-ethereum/core/types"
+	"github.com/scroll-tech/go-ethereum/da-codec/encoding"
 	"github.com/scroll-tech/go-ethereum/ethdb"
 	"github.com/scroll-tech/go-ethereum/log"
 	"github.com/scroll-tech/go-ethereum/rollup/da_syncer/serrors"

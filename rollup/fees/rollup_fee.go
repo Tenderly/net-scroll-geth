@@ -7,11 +7,10 @@ import (
 	"math/big"
 
 	"github.com/holiman/uint256"
-	"github.com/scroll-tech/da-codec/encoding"
-
 	"github.com/scroll-tech/go-ethereum/common"
 	"github.com/scroll-tech/go-ethereum/core/types"
 	"github.com/scroll-tech/go-ethereum/crypto"
+	"github.com/scroll-tech/go-ethereum/da-codec/encoding"
 	"github.com/scroll-tech/go-ethereum/log"
 	"github.com/scroll-tech/go-ethereum/params"
 	"github.com/scroll-tech/go-ethereum/rollup/rcfg"
