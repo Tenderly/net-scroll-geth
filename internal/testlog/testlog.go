@@ -21,7 +21,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/scroll-tech/go-ethereum/log"
+	"github.com/tenderly/net-scroll-geth/log"
 )
 
 // Handler returns a log handler which logs to the unit test log of t.

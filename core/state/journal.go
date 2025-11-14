@@ -19,7 +19,7 @@ package state
 import (
 	"math/big"
 
-	"github.com/scroll-tech/go-ethereum/common"
+	"github.com/tenderly/net-scroll-geth/common"
 )
 
 // journalEntry is a modification entry in the state change journal that can be

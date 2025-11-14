@@ -21,7 +21,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/scroll-tech/go-ethereum/core/vm"
+	"github.com/tenderly/net-scroll-geth/core/vm"
 )
 
 // Iterator for disassembled EVM instructions

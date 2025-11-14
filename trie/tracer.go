@@ -19,7 +19,7 @@ package trie
 import (
 	"maps"
 
-	"github.com/scroll-tech/go-ethereum/common"
+	"github.com/tenderly/net-scroll-geth/common"
 )
 
 // tracer tracks the changes of trie nodes. During the trie operations,

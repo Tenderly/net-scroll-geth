@@ -1,7 +1,7 @@
 package da
 
 import (
-	"github.com/scroll-tech/go-ethereum/rollup/l1"
+	"github.com/tenderly/net-scroll-geth/rollup/l1"
 )
 
 type RevertBatch struct {

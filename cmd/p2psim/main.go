@@ -47,12 +47,12 @@ import (
 
 	"gopkg.in/urfave/cli.v1"
 
-	"github.com/scroll-tech/go-ethereum/crypto"
-	"github.com/scroll-tech/go-ethereum/p2p"
-	"github.com/scroll-tech/go-ethereum/p2p/enode"
-	"github.com/scroll-tech/go-ethereum/p2p/simulations"
-	"github.com/scroll-tech/go-ethereum/p2p/simulations/adapters"
-	"github.com/scroll-tech/go-ethereum/rpc"
+	"github.com/tenderly/net-scroll-geth/crypto"
+	"github.com/tenderly/net-scroll-geth/p2p"
+	"github.com/tenderly/net-scroll-geth/p2p/enode"
+	"github.com/tenderly/net-scroll-geth/p2p/simulations"
+	"github.com/tenderly/net-scroll-geth/p2p/simulations/adapters"
+	"github.com/tenderly/net-scroll-geth/rpc"
 )
 
 var client *simulations.Client

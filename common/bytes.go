@@ -21,7 +21,7 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"github.com/scroll-tech/go-ethereum/common/hexutil"
+	"github.com/tenderly/net-scroll-geth/common/hexutil"
 )
 
 // FromHex returns the bytes represented by the hexadecimal string s.
