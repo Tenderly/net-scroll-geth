@@ -10,3 +10,9 @@ crate-type = ["staticlib", "lib"]
 
 [dependencies]
 zstd = { version = "=0.13.3", features = ["experimental"] }
+
+[profile.release]
+panic = "abort"
+
+# Use build script to configure symbol prefixing
+[build-dependencies]
