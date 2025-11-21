@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/scroll-tech/go-ethereum/ethdb"
-	"github.com/scroll-tech/go-ethereum/rollup/da_syncer/blob_client"
-	"github.com/scroll-tech/go-ethereum/rollup/da_syncer/da"
-	"github.com/scroll-tech/go-ethereum/rollup/l1"
+	"github.com/tenderly/net-scroll-geth/ethdb"
+	"github.com/tenderly/net-scroll-geth/rollup/da_syncer/blob_client"
+	"github.com/tenderly/net-scroll-geth/rollup/da_syncer/da"
+	"github.com/tenderly/net-scroll-geth/rollup/l1"
 )
 
 type L1MessageQueueHeightFinder struct {

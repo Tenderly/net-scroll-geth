@@ -19,7 +19,7 @@ package snapshot
 import (
 	"bytes"
 
-	"github.com/scroll-tech/go-ethereum/common"
+	"github.com/tenderly/net-scroll-geth/common"
 )
 
 // hashes is a helper to implement sort.Interface.

@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/scroll-tech/go-ethereum/cmd/evm/internal/compiler"
+	"github.com/tenderly/net-scroll-geth/cmd/evm/internal/compiler"
 
 	"gopkg.in/urfave/cli.v1"
 )

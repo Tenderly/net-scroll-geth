@@ -24,8 +24,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/common/hexutil"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/common/hexutil"
 )
 
 // Hash represents the 32 byte Keccak256 hash of arbitrary data.

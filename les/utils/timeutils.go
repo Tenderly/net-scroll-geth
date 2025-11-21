@@ -20,7 +20,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/common/mclock"
+	"github.com/tenderly/net-scroll-geth/common/mclock"
 )
 
 type UpdateTimer struct {

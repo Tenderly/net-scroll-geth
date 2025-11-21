@@ -3,11 +3,11 @@ package l2_system_config
 import (
 	"math/big"
 
-	"github.com/scroll-tech/go-ethereum/accounts/abi"
-	"github.com/scroll-tech/go-ethereum/accounts/abi/bind"
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/rollup/l1"
+	"github.com/tenderly/net-scroll-geth/accounts/abi"
+	"github.com/tenderly/net-scroll-geth/accounts/abi/bind"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/rollup/l1"
 )
 
 var (

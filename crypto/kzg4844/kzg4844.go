@@ -24,7 +24,7 @@ import (
 	"reflect"
 	"sync/atomic"
 
-	"github.com/scroll-tech/go-ethereum/common/hexutil"
+	"github.com/tenderly/net-scroll-geth/common/hexutil"
 )
 
 //go:embed trusted_setup.json

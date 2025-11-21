@@ -1,6 +1,6 @@
 package common
 
-import "github.com/scroll-tech/go-ethereum/metrics"
+import "github.com/tenderly/net-scroll-geth/metrics"
 
 // WithTimer calculates the interval of f
 func WithTimer(timer metrics.Timer, f func()) {

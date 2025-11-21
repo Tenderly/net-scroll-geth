@@ -19,8 +19,8 @@ package core
 import (
 	"sync"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/core/state"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/core/state"
 )
 
 // txNoncer is a tiny virtual state database to manage the executable nonces of

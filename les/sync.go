@@ -21,12 +21,12 @@ import (
 	"errors"
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/core/rawdb"
-	"github.com/scroll-tech/go-ethereum/les/downloader"
-	"github.com/scroll-tech/go-ethereum/light"
-	"github.com/scroll-tech/go-ethereum/log"
-	"github.com/scroll-tech/go-ethereum/params"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/core/rawdb"
+	"github.com/tenderly/net-scroll-geth/les/downloader"
+	"github.com/tenderly/net-scroll-geth/light"
+	"github.com/tenderly/net-scroll-geth/log"
+	"github.com/tenderly/net-scroll-geth/params"
 )
 
 var errInvalidCheckpoint = errors.New("invalid advertised checkpoint")

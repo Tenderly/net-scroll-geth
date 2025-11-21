@@ -21,15 +21,15 @@ import (
 
 	"gopkg.in/urfave/cli.v1"
 
-	"github.com/scroll-tech/go-ethereum/accounts"
-	"github.com/scroll-tech/go-ethereum/accounts/abi/bind"
-	"github.com/scroll-tech/go-ethereum/accounts/external"
-	"github.com/scroll-tech/go-ethereum/cmd/utils"
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/contracts/checkpointoracle"
-	"github.com/scroll-tech/go-ethereum/ethclient"
-	"github.com/scroll-tech/go-ethereum/params"
-	"github.com/scroll-tech/go-ethereum/rpc"
+	"github.com/tenderly/net-scroll-geth/accounts"
+	"github.com/tenderly/net-scroll-geth/accounts/abi/bind"
+	"github.com/tenderly/net-scroll-geth/accounts/external"
+	"github.com/tenderly/net-scroll-geth/cmd/utils"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/contracts/checkpointoracle"
+	"github.com/tenderly/net-scroll-geth/ethclient"
+	"github.com/tenderly/net-scroll-geth/params"
+	"github.com/tenderly/net-scroll-geth/rpc"
 )
 
 // newClient creates a client with specified remote URL.

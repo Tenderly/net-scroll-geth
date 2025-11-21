@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/scroll-tech/go-ethereum/core/types"
+	"github.com/tenderly/net-scroll-geth/core/types"
 )
 
 // constructSkippedBitmap constructs skipped L1 message bitmap of the batch.

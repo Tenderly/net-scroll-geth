@@ -32,11 +32,11 @@ import (
 	"github.com/mattn/go-colorable"
 	"github.com/peterh/liner"
 
-	"github.com/scroll-tech/go-ethereum/console/prompt"
-	"github.com/scroll-tech/go-ethereum/internal/jsre"
-	"github.com/scroll-tech/go-ethereum/internal/jsre/deps"
-	"github.com/scroll-tech/go-ethereum/internal/web3ext"
-	"github.com/scroll-tech/go-ethereum/rpc"
+	"github.com/tenderly/net-scroll-geth/console/prompt"
+	"github.com/tenderly/net-scroll-geth/internal/jsre"
+	"github.com/tenderly/net-scroll-geth/internal/jsre/deps"
+	"github.com/tenderly/net-scroll-geth/internal/web3ext"
+	"github.com/tenderly/net-scroll-geth/rpc"
 )
 
 var (

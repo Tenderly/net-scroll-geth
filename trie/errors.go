@@ -19,7 +19,7 @@ package trie
 import (
 	"fmt"
 
-	"github.com/scroll-tech/go-ethereum/common"
+	"github.com/tenderly/net-scroll-geth/common"
 )
 
 // MissingNodeError is returned by the trie functions (TryGet, TryUpdate, TryDelete)

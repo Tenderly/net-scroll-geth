@@ -29,9 +29,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/crypto"
-	"github.com/scroll-tech/go-ethereum/rlp"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/crypto"
+	"github.com/tenderly/net-scroll-geth/rlp"
 )
 
 // The values in those tests are from the Transaction Tests

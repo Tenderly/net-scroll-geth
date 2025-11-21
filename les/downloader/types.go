@@ -19,7 +19,7 @@ package downloader
 import (
 	"fmt"
 
-	"github.com/scroll-tech/go-ethereum/core/types"
+	"github.com/tenderly/net-scroll-geth/core/types"
 )
 
 // peerDropFn is a callback type for dropping a peer detected as malicious.

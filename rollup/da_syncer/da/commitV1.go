@@ -5,12 +5,12 @@ import (
 	"crypto/sha256"
 	"fmt"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/crypto/kzg4844"
-	"github.com/scroll-tech/go-ethereum/da-codec/encoding"
-	"github.com/scroll-tech/go-ethereum/ethdb"
-	"github.com/scroll-tech/go-ethereum/rollup/da_syncer/blob_client"
-	"github.com/scroll-tech/go-ethereum/rollup/l1"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/crypto/kzg4844"
+	"github.com/tenderly/net-scroll-geth/da-codec/encoding"
+	"github.com/tenderly/net-scroll-geth/ethdb"
+	"github.com/tenderly/net-scroll-geth/rollup/da_syncer/blob_client"
+	"github.com/tenderly/net-scroll-geth/rollup/l1"
 )
 
 type CommitBatchDAV1 struct {

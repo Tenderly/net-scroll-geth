@@ -28,7 +28,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/scroll-tech/go-ethereum/common"
+	"github.com/tenderly/net-scroll-geth/common"
 )
 
 // TestUnpack tests the general pack/unpack tests in packing_test.go

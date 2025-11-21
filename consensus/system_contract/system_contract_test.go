@@ -8,13 +8,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/scroll-tech/go-ethereum/accounts"
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/log"
-	"github.com/scroll-tech/go-ethereum/params"
-	"github.com/scroll-tech/go-ethereum/rollup/sync_service"
-	"github.com/scroll-tech/go-ethereum/trie"
+	"github.com/tenderly/net-scroll-geth/accounts"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/log"
+	"github.com/tenderly/net-scroll-geth/params"
+	"github.com/tenderly/net-scroll-geth/rollup/sync_service"
+	"github.com/tenderly/net-scroll-geth/trie"
 )
 
 var _ sync_service.EthClient = &FakeEthClient{}
