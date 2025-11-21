@@ -23,12 +23,12 @@ import (
 
 	mapset "github.com/deckarep/golang-set"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/log"
-	"github.com/scroll-tech/go-ethereum/metrics"
-	"github.com/scroll-tech/go-ethereum/p2p"
-	"github.com/scroll-tech/go-ethereum/rlp"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/log"
+	"github.com/tenderly/net-scroll-geth/metrics"
+	"github.com/tenderly/net-scroll-geth/p2p"
+	"github.com/tenderly/net-scroll-geth/rlp"
 )
 
 var (

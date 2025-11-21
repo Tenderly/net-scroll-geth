@@ -21,7 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/scroll-tech/go-ethereum/tests/fuzzers/les"
+	"github.com/tenderly/net-scroll-geth/tests/fuzzers/les"
 )
 
 func main() {

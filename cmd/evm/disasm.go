@@ -24,7 +24,7 @@ import (
 
 	"gopkg.in/urfave/cli.v1"
 
-	"github.com/scroll-tech/go-ethereum/core/asm"
+	"github.com/tenderly/net-scroll-geth/core/asm"
 )
 
 var disasmCommand = cli.Command{

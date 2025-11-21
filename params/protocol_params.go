@@ -19,7 +19,7 @@ package params
 import (
 	"math/big"
 
-	"github.com/scroll-tech/go-ethereum/common"
+	"github.com/tenderly/net-scroll-geth/common"
 )
 
 const (

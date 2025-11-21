@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/les/utils"
+	"github.com/tenderly/net-scroll-geth/les/utils"
 )
 
 func TestTransition(t *testing.T) {

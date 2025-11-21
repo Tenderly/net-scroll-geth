@@ -19,8 +19,8 @@ package stateless
 import (
 	"io"
 
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/rlp"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/rlp"
 )
 
 // toExtWitness converts our internal witness representation to the consensus one.

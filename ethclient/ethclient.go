@@ -24,13 +24,13 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/scroll-tech/go-ethereum"
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/common/hexutil"
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/eth"
-	"github.com/scroll-tech/go-ethereum/eth/tracers"
-	"github.com/scroll-tech/go-ethereum/rpc"
+	"github.com/tenderly/net-scroll-geth"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/common/hexutil"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/eth"
+	"github.com/tenderly/net-scroll-geth/eth/tracers"
+	"github.com/tenderly/net-scroll-geth/rpc"
 )
 
 // Client defines typed wrappers for the Ethereum RPC API.

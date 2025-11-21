@@ -27,19 +27,19 @@ import (
 
 	"github.com/holiman/uint256"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/common/math"
-	"github.com/scroll-tech/go-ethereum/consensus"
-	"github.com/scroll-tech/go-ethereum/consensus/ethash"
-	"github.com/scroll-tech/go-ethereum/consensus/misc"
-	"github.com/scroll-tech/go-ethereum/core/rawdb"
-	"github.com/scroll-tech/go-ethereum/core/state"
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/core/vm"
-	"github.com/scroll-tech/go-ethereum/crypto"
-	"github.com/scroll-tech/go-ethereum/ethdb/memorydb"
-	"github.com/scroll-tech/go-ethereum/params"
-	"github.com/scroll-tech/go-ethereum/trie"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/common/math"
+	"github.com/tenderly/net-scroll-geth/consensus"
+	"github.com/tenderly/net-scroll-geth/consensus/ethash"
+	"github.com/tenderly/net-scroll-geth/consensus/misc"
+	"github.com/tenderly/net-scroll-geth/core/rawdb"
+	"github.com/tenderly/net-scroll-geth/core/state"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/core/vm"
+	"github.com/tenderly/net-scroll-geth/crypto"
+	"github.com/tenderly/net-scroll-geth/ethdb/memorydb"
+	"github.com/tenderly/net-scroll-geth/params"
+	"github.com/tenderly/net-scroll-geth/trie"
 )
 
 // TestStateProcessorErrors tests the output from the 'core' errors

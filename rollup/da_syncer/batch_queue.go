@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/core/rawdb"
-	"github.com/scroll-tech/go-ethereum/ethdb"
-	"github.com/scroll-tech/go-ethereum/log"
-	"github.com/scroll-tech/go-ethereum/rollup/da_syncer/da"
-	"github.com/scroll-tech/go-ethereum/rollup/l1"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/core/rawdb"
+	"github.com/tenderly/net-scroll-geth/ethdb"
+	"github.com/tenderly/net-scroll-geth/log"
+	"github.com/tenderly/net-scroll-geth/rollup/da_syncer/da"
+	"github.com/tenderly/net-scroll-geth/rollup/l1"
 )
 
 // BatchQueue is a pipeline stage that reads all batch events from DAQueue and provides only finalized batches to the next stage.

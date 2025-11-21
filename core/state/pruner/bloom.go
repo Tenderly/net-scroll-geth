@@ -23,9 +23,9 @@ import (
 
 	bloomfilter "github.com/holiman/bloomfilter/v2"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/core/rawdb"
-	"github.com/scroll-tech/go-ethereum/log"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/core/rawdb"
+	"github.com/tenderly/net-scroll-geth/log"
 )
 
 // stateBloomHasher is a wrapper around a byte blob to satisfy the interface API

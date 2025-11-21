@@ -25,14 +25,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/core"
-	"github.com/scroll-tech/go-ethereum/core/forkid"
-	"github.com/scroll-tech/go-ethereum/core/rawdb"
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/p2p"
-	"github.com/scroll-tech/go-ethereum/p2p/enode"
-	"github.com/scroll-tech/go-ethereum/params"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/core"
+	"github.com/tenderly/net-scroll-geth/core/forkid"
+	"github.com/tenderly/net-scroll-geth/core/rawdb"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/p2p"
+	"github.com/tenderly/net-scroll-geth/p2p/enode"
+	"github.com/tenderly/net-scroll-geth/params"
 )
 
 type testServerPeerSub struct {

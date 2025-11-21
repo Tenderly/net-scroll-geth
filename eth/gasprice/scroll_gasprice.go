@@ -5,10 +5,10 @@ import (
 	"math/big"
 	"sort"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/log"
-	"github.com/scroll-tech/go-ethereum/rpc"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/log"
+	"github.com/tenderly/net-scroll-geth/rpc"
 )
 
 func (oracle *Oracle) calculateSuggestPriorityFee(ctx context.Context, header *types.Header) (*big.Int, bool) {

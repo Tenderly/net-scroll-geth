@@ -22,7 +22,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/scroll-tech/go-ethereum/rpc"
+	"github.com/tenderly/net-scroll-geth/rpc"
 )
 
 func TestFeeHistory(t *testing.T) {

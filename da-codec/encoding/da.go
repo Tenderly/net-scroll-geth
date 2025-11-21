@@ -11,13 +11,13 @@ import (
 
 	"github.com/holiman/uint256"
 	"github.com/klauspost/compress/zstd"
-	"github.com/scroll-tech/go-ethereum/crypto"
+	"github.com/tenderly/net-scroll-geth/crypto"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/common/hexutil"
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/crypto/kzg4844"
-	"github.com/scroll-tech/go-ethereum/params"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/common/hexutil"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/crypto/kzg4844"
+	"github.com/tenderly/net-scroll-geth/params"
 )
 
 // blsModulus is the BLS modulus defined in EIP-4844.

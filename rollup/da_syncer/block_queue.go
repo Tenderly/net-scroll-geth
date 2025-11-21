@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/scroll-tech/go-ethereum/core/rawdb"
-	"github.com/scroll-tech/go-ethereum/rollup/da_syncer/da"
-	"github.com/scroll-tech/go-ethereum/rollup/missing_header_fields"
+	"github.com/tenderly/net-scroll-geth/core/rawdb"
+	"github.com/tenderly/net-scroll-geth/rollup/da_syncer/da"
+	"github.com/tenderly/net-scroll-geth/rollup/missing_header_fields"
 )
 
 // BlockQueue is a pipeline stage that reads batches from BatchQueue, extracts all da.PartialBlock from it and

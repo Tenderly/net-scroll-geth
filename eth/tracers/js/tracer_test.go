@@ -23,11 +23,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/core/state"
-	"github.com/scroll-tech/go-ethereum/core/vm"
-	"github.com/scroll-tech/go-ethereum/eth/tracers"
-	"github.com/scroll-tech/go-ethereum/params"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/core/state"
+	"github.com/tenderly/net-scroll-geth/core/vm"
+	"github.com/tenderly/net-scroll-geth/eth/tracers"
+	"github.com/tenderly/net-scroll-geth/params"
 )
 
 type account struct{}
