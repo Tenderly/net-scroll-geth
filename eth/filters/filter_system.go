@@ -24,14 +24,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/scroll-tech/go-ethereum"
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/core"
-	"github.com/scroll-tech/go-ethereum/core/rawdb"
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/event"
-	"github.com/scroll-tech/go-ethereum/log"
-	"github.com/scroll-tech/go-ethereum/rpc"
+	"github.com/tenderly/net-scroll-geth"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/core"
+	"github.com/tenderly/net-scroll-geth/core/rawdb"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/event"
+	"github.com/tenderly/net-scroll-geth/log"
+	"github.com/tenderly/net-scroll-geth/rpc"
 )
 
 // Type determines the kind of filter and is used to put the filter in to

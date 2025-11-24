@@ -4,10 +4,10 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/core/vm"
-	_ "github.com/scroll-tech/go-ethereum/eth/tracers/native"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/core/vm"
+	_ "github.com/tenderly/net-scroll-geth/eth/tracers/native"
 )
 
 // MuxTracer is a tracer mux, to support running multiple tracers together

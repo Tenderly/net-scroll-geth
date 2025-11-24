@@ -21,8 +21,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/scroll-tech/go-ethereum/log"
-	"github.com/scroll-tech/go-ethereum/tests/fuzzers/vflux"
+	"github.com/tenderly/net-scroll-geth/log"
+	"github.com/tenderly/net-scroll-geth/tests/fuzzers/vflux"
 )
 
 func main() {

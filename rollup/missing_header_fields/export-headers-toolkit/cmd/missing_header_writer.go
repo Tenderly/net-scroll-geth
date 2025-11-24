@@ -9,10 +9,10 @@ import (
 	"os"
 	"sort"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	coreTypes "github.com/scroll-tech/go-ethereum/core/types"
+	"github.com/tenderly/net-scroll-geth/common"
+	coreTypes "github.com/tenderly/net-scroll-geth/core/types"
 
-	"github.com/scroll-tech/go-ethereum/export-headers-toolkit/types"
+	"github.com/tenderly/net-scroll-geth/export-headers-toolkit/types"
 )
 
 // maxVanityCount is the maximum number of unique vanities that can be represented with a single byte.

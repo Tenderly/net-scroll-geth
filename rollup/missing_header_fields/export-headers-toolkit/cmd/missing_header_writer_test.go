@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	coreTypes "github.com/scroll-tech/go-ethereum/core/types"
+	coreTypes "github.com/tenderly/net-scroll-geth/core/types"
 
-	"github.com/scroll-tech/go-ethereum/common"
+	"github.com/tenderly/net-scroll-geth/common"
 
-	"github.com/scroll-tech/go-ethereum/export-headers-toolkit/types"
+	"github.com/tenderly/net-scroll-geth/export-headers-toolkit/types"
 )
 
 func TestMissingHeaderWriter(t *testing.T) {

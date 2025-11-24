@@ -3,11 +3,11 @@ package da
 import (
 	"math/big"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/da-codec/encoding"
-	"github.com/scroll-tech/go-ethereum/rollup/l1"
-	"github.com/scroll-tech/go-ethereum/rollup/missing_header_fields"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/da-codec/encoding"
+	"github.com/tenderly/net-scroll-geth/rollup/l1"
+	"github.com/tenderly/net-scroll-geth/rollup/missing_header_fields"
 )
 
 type Type int

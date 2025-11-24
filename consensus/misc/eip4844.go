@@ -19,7 +19,7 @@ package misc
 import (
 	"math/big"
 
-	"github.com/scroll-tech/go-ethereum/params"
+	"github.com/tenderly/net-scroll-geth/params"
 )
 
 var (

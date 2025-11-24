@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/p2p"
-	"github.com/scroll-tech/go-ethereum/rpc"
+	"github.com/tenderly/net-scroll-geth/p2p"
+	"github.com/tenderly/net-scroll-geth/rpc"
 )
 
 type gethrpc struct {

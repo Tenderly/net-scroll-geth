@@ -27,13 +27,13 @@ import (
 
 	"gopkg.in/urfave/cli.v1"
 
-	"github.com/scroll-tech/go-ethereum/accounts/abi"
-	"github.com/scroll-tech/go-ethereum/accounts/abi/bind"
-	"github.com/scroll-tech/go-ethereum/cmd/utils"
-	"github.com/scroll-tech/go-ethereum/common/compiler"
-	"github.com/scroll-tech/go-ethereum/crypto"
-	"github.com/scroll-tech/go-ethereum/internal/flags"
-	"github.com/scroll-tech/go-ethereum/log"
+	"github.com/tenderly/net-scroll-geth/accounts/abi"
+	"github.com/tenderly/net-scroll-geth/accounts/abi/bind"
+	"github.com/tenderly/net-scroll-geth/cmd/utils"
+	"github.com/tenderly/net-scroll-geth/common/compiler"
+	"github.com/tenderly/net-scroll-geth/crypto"
+	"github.com/tenderly/net-scroll-geth/internal/flags"
+	"github.com/tenderly/net-scroll-geth/log"
 )
 
 var (

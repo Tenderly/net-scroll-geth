@@ -31,9 +31,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/scroll-tech/go-ethereum/accounts"
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/crypto"
+	"github.com/tenderly/net-scroll-geth/accounts"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/crypto"
 )
 
 const (

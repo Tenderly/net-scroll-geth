@@ -26,10 +26,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/internal/testlog"
-	"github.com/scroll-tech/go-ethereum/log"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/internal/testlog"
+	"github.com/tenderly/net-scroll-geth/log"
 )
 
 // Tests whether remote HTTP servers are correctly notified of new work.

@@ -22,8 +22,8 @@ import (
 
 	"gopkg.in/urfave/cli.v1"
 
-	"github.com/scroll-tech/go-ethereum/core/vm"
-	"github.com/scroll-tech/go-ethereum/tests"
+	"github.com/tenderly/net-scroll-geth/core/vm"
+	"github.com/tenderly/net-scroll-geth/tests"
 )
 
 var (

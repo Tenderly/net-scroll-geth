@@ -23,12 +23,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/common/mclock"
-	"github.com/scroll-tech/go-ethereum/eth/ethconfig"
-	"github.com/scroll-tech/go-ethereum/ethdb"
-	"github.com/scroll-tech/go-ethereum/les/flowcontrol"
-	"github.com/scroll-tech/go-ethereum/log"
-	"github.com/scroll-tech/go-ethereum/metrics"
+	"github.com/tenderly/net-scroll-geth/common/mclock"
+	"github.com/tenderly/net-scroll-geth/eth/ethconfig"
+	"github.com/tenderly/net-scroll-geth/ethdb"
+	"github.com/tenderly/net-scroll-geth/les/flowcontrol"
+	"github.com/tenderly/net-scroll-geth/log"
+	"github.com/tenderly/net-scroll-geth/metrics"
 )
 
 const makeCostStats = false // make request cost statistics during operation

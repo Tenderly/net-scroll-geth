@@ -22,8 +22,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/scroll-tech/go-ethereum/common/math"
-	"github.com/scroll-tech/go-ethereum/core/vm"
+	"github.com/tenderly/net-scroll-geth/common/math"
+	"github.com/tenderly/net-scroll-geth/core/vm"
 )
 
 // Compiler contains information about the parsed source

@@ -21,7 +21,7 @@ import (
 
 	"gopkg.in/urfave/cli.v1"
 
-	"github.com/scroll-tech/go-ethereum/eth/ethconfig"
+	"github.com/tenderly/net-scroll-geth/eth/ethconfig"
 )
 
 var ShowDeprecated = cli.Command{

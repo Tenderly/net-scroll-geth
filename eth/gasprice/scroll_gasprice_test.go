@@ -22,15 +22,15 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/core"
-	"github.com/scroll-tech/go-ethereum/core/state"
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/crypto"
-	"github.com/scroll-tech/go-ethereum/event"
-	"github.com/scroll-tech/go-ethereum/params"
-	"github.com/scroll-tech/go-ethereum/rpc"
-	"github.com/scroll-tech/go-ethereum/trie"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/core"
+	"github.com/tenderly/net-scroll-geth/core/state"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/crypto"
+	"github.com/tenderly/net-scroll-geth/event"
+	"github.com/tenderly/net-scroll-geth/params"
+	"github.com/tenderly/net-scroll-geth/rpc"
+	"github.com/tenderly/net-scroll-geth/trie"
 )
 
 var (

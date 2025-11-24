@@ -22,11 +22,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/core/types"
-	"github.com/scroll-tech/go-ethereum/crypto"
-	"github.com/scroll-tech/go-ethereum/internal/utesting"
-	"github.com/scroll-tech/go-ethereum/params"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/core/types"
+	"github.com/tenderly/net-scroll-geth/crypto"
+	"github.com/tenderly/net-scroll-geth/internal/utesting"
+	"github.com/tenderly/net-scroll-geth/params"
 )
 
 //var faucetAddr = common.HexToAddress("0x71562b71999873DB5b286dF957af199Ec94617F7")

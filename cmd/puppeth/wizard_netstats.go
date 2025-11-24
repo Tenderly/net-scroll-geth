@@ -25,8 +25,8 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 
-	"github.com/scroll-tech/go-ethereum/core"
-	"github.com/scroll-tech/go-ethereum/log"
+	"github.com/tenderly/net-scroll-geth/core"
+	"github.com/tenderly/net-scroll-geth/log"
 )
 
 // networkStats verifies the status of network components and generates a protip

@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/scroll-tech/go-ethereum/common"
-	"github.com/scroll-tech/go-ethereum/crypto"
-	"github.com/scroll-tech/go-ethereum/crypto/kzg4844"
-	"github.com/scroll-tech/go-ethereum/log"
+	"github.com/tenderly/net-scroll-geth/common"
+	"github.com/tenderly/net-scroll-geth/crypto"
+	"github.com/tenderly/net-scroll-geth/crypto/kzg4844"
+	"github.com/tenderly/net-scroll-geth/log"
 )
 
 // DACodecV9 updates the implementation of the base function checkCompressedDataCompatibility

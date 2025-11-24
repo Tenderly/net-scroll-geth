@@ -21,8 +21,8 @@ import (
 
 	"gopkg.in/urfave/cli.v1"
 
-	"github.com/scroll-tech/go-ethereum/cmd/utils"
-	"github.com/scroll-tech/go-ethereum/common"
+	"github.com/tenderly/net-scroll-geth/cmd/utils"
+	"github.com/tenderly/net-scroll-geth/common"
 )
 
 var commandStatus = cli.Command{

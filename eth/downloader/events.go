@@ -16,7 +16,7 @@
 
 package downloader
 
-import "github.com/scroll-tech/go-ethereum/core/types"
+import "github.com/tenderly/net-scroll-geth/core/types"
 
 type DoneEvent struct {
 	Latest *types.Header
