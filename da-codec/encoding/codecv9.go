@@ -10,32 +10,31 @@ import (
 	"github.com/scroll-tech/go-ethereum/crypto"
 	"github.com/scroll-tech/go-ethereum/crypto/kzg4844"
 	"github.com/scroll-tech/go-ethereum/log"
-
-	"github.com/tenderly/net-scroll-geth/da-codec/encoding/zstd"
 )
 
-// DACodecV8 uses CompressScrollBatchBytesStandard for compression instead of CompressScrollBatchBytesLegacy.
+// DACodecV9 updates the implementation of the base function checkCompressedDataCompatibility
+// to use the V9 compatibility check (checkCompressedDataCompatibilityV9) instead of the previous V7 version.
 //
-// Note: Due to Go's method receiver behavior, we need to override all methods that call checkCompressedDataCompatibility.
-// When a method in DACodecV7 calls d.checkCompressedDataCompatibility(), it will always use DACodecV7's version,
-// even if the instance is actually a DACodecV8. Therefore, we must override:
-// - checkCompressedDataCompatibility (core method using the new compression)
+// As per Go's rules for shadowing methods with struct embedding, we need to override
+// all methods that (transitively) call checkCompressedDataCompatibility:
+// - checkCompressedDataCompatibility (updated to use V9)
 // - constructBlob (calls checkCompressedDataCompatibility)
 // - NewDABatch (calls constructBlob)
-// - CheckChunkCompressedDataCompatibility (calls checkCompressedDataCompatibility)
+// - CheckChunkCompressedDataCompatibility (calls CheckBatchCompressedDataCompatibility)
 // - CheckBatchCompressedDataCompatibility (calls checkCompressedDataCompatibility)
 // - estimateL1CommitBatchSizeAndBlobSize (calls checkCompressedDataCompatibility)
 // - EstimateChunkL1CommitBatchSizeAndBlobSize (calls estimateL1CommitBatchSizeAndBlobSize)
 // - EstimateBatchL1CommitBatchSizeAndBlobSize (calls estimateL1CommitBatchSizeAndBlobSize)
-type DACodecV8 struct {
-	DACodecV7
+
+type DACodecV9 struct {
+	DACodecV8
 }
 
-func NewDACodecV8() *DACodecV8 {
-	v := CodecV8
-	return &DACodecV8{
-		DACodecV7: DACodecV7{
-			forcedVersion: &v,
+func NewDACodecV9() *DACodecV9 {
+	v := CodecV9
+	return &DACodecV9{
+		DACodecV8: DACodecV8{
+			DACodecV7: DACodecV7{forcedVersion: &v},
 		},
 	}
 }
@@ -45,13 +44,13 @@ func NewDACodecV8() *DACodecV8 {
 // flag checkLength indicates whether to check the length of the compressed data against the original data.
 // If checkLength is true, this function returns if compression is needed based on the compressed data's length, which is used when doing batch bytes encoding.
 // If checkLength is false, this function returns the result of the compatibility check, which is used when determining the chunk and batch contents.
-func (d *DACodecV8) checkCompressedDataCompatibility(payloadBytes []byte, checkLength bool) ([]byte, bool, error) {
+func (d *DACodecV9) checkCompressedDataCompatibility(payloadBytes []byte, checkLength bool) ([]byte, bool, error) {
 	compressedPayloadBytes, err := d.CompressScrollBatchBytes(payloadBytes)
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to compress blob payload: %w", err)
 	}
 
-	if err = checkCompressedDataCompatibilityV7(compressedPayloadBytes); err != nil {
+	if err = checkCompressedDataCompatibilityV9(compressedPayloadBytes); err != nil {
 		log.Warn("Compressed data compatibility check failed", "err", err, "payloadBytes", hex.EncodeToString(payloadBytes), "compressedPayloadBytes", hex.EncodeToString(compressedPayloadBytes))
 		return nil, false, nil
 	}
@@ -66,7 +65,7 @@ func (d *DACodecV8) checkCompressedDataCompatibility(payloadBytes []byte, checkL
 }
 
 // NewDABatch creates a DABatch including blob from the provided Batch.
-func (d *DACodecV8) NewDABatch(batch *Batch) (DABatch, error) {
+func (d *DACodecV9) NewDABatch(batch *Batch) (DABatch, error) {
 	if len(batch.Blocks) == 0 {
 		return nil, errors.New("batch must contain at least one block")
 	}
@@ -88,7 +87,7 @@ func (d *DACodecV8) NewDABatch(batch *Batch) (DABatch, error) {
 	return daBatch, nil
 }
 
-func (d *DACodecV8) constructBlob(batch *Batch) (*kzg4844.Blob, common.Hash, []byte, common.Hash, error) {
+func (d *DACodecV9) constructBlob(batch *Batch) (*kzg4844.Blob, common.Hash, []byte, common.Hash, error) {
 	blobBytes := make([]byte, blobEnvelopeV7OffsetPayload)
 
 	payloadBytes, err := d.constructBlobPayload(batch)
@@ -143,7 +142,7 @@ func (d *DACodecV8) constructBlob(batch *Batch) (*kzg4844.Blob, common.Hash, []b
 }
 
 // CheckChunkCompressedDataCompatibility checks the compressed data compatibility for a batch built from a single chunk.
-func (d *DACodecV8) CheckChunkCompressedDataCompatibility(c *Chunk) (bool, error) {
+func (d *DACodecV9) CheckChunkCompressedDataCompatibility(c *Chunk) (bool, error) {
 	// filling the needed fields for the batch used in the check
 	b := &Batch{
 		Chunks:                 []*Chunk{c},
@@ -156,7 +155,7 @@ func (d *DACodecV8) CheckChunkCompressedDataCompatibility(c *Chunk) (bool, error
 }
 
 // CheckBatchCompressedDataCompatibility checks the compressed data compatibility for a batch.
-func (d *DACodecV8) CheckBatchCompressedDataCompatibility(b *Batch) (bool, error) {
+func (d *DACodecV9) CheckBatchCompressedDataCompatibility(b *Batch) (bool, error) {
 	if len(b.Blocks) == 0 {
 		return false, errors.New("batch must contain at least one block")
 	}
@@ -181,7 +180,7 @@ func (d *DACodecV8) CheckBatchCompressedDataCompatibility(b *Batch) (bool, error
 	return compatible, nil
 }
 
-func (d *DACodecV8) estimateL1CommitBatchSizeAndBlobSize(batch *Batch) (uint64, uint64, error) {
+func (d *DACodecV9) estimateL1CommitBatchSizeAndBlobSize(batch *Batch) (uint64, uint64, error) {
 	if len(batch.Blocks) == 0 {
 		return 0, 0, errors.New("batch must contain at least one block")
 	}
@@ -208,7 +207,7 @@ func (d *DACodecV8) estimateL1CommitBatchSizeAndBlobSize(batch *Batch) (uint64, 
 }
 
 // EstimateChunkL1CommitBatchSizeAndBlobSize estimates the L1 commit batch size and blob size for a single chunk.
-func (d *DACodecV8) EstimateChunkL1CommitBatchSizeAndBlobSize(chunk *Chunk) (uint64, uint64, error) {
+func (d *DACodecV9) EstimateChunkL1CommitBatchSizeAndBlobSize(chunk *Chunk) (uint64, uint64, error) {
 	return d.estimateL1CommitBatchSizeAndBlobSize(&Batch{
 		Blocks:                 chunk.Blocks,
 		PrevL1MessageQueueHash: chunk.PrevL1MessageQueueHash,
@@ -217,11 +216,6 @@ func (d *DACodecV8) EstimateChunkL1CommitBatchSizeAndBlobSize(chunk *Chunk) (uin
 }
 
 // EstimateBatchL1CommitBatchSizeAndBlobSize estimates the L1 commit batch size and blob size for a batch.
-func (d *DACodecV8) EstimateBatchL1CommitBatchSizeAndBlobSize(batch *Batch) (uint64, uint64, error) {
+func (d *DACodecV9) EstimateBatchL1CommitBatchSizeAndBlobSize(batch *Batch) (uint64, uint64, error) {
 	return d.estimateL1CommitBatchSizeAndBlobSize(batch)
-}
-
-// CompressScrollBatchBytes compresses the batch bytes using zstd compression.
-func (d *DACodecV8) CompressScrollBatchBytes(batchBytes []byte) ([]byte, error) {
-	return zstd.CompressScrollBatchBytesStandard(batchBytes)
 }

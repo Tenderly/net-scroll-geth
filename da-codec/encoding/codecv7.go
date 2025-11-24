@@ -12,8 +12,9 @@ import (
 	"github.com/scroll-tech/go-ethereum/core/types"
 	"github.com/scroll-tech/go-ethereum/crypto"
 	"github.com/scroll-tech/go-ethereum/crypto/kzg4844"
-	"github.com/scroll-tech/go-ethereum/da-codec/encoding/zstd"
 	"github.com/scroll-tech/go-ethereum/log"
+
+	"github.com/tenderly/net-scroll-geth/da-codec/encoding/zstd"
 )
 
 type DACodecV7 struct {

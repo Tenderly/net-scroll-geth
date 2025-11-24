@@ -12,8 +12,9 @@ import (
 	"github.com/scroll-tech/go-ethereum/core/types"
 	"github.com/scroll-tech/go-ethereum/crypto"
 	"github.com/scroll-tech/go-ethereum/crypto/kzg4844"
-	"github.com/scroll-tech/go-ethereum/da-codec/encoding/zstd"
 	"github.com/scroll-tech/go-ethereum/log"
+
+	"github.com/tenderly/net-scroll-geth/da-codec/encoding/zstd"
 )
 
 type DACodecV2 struct {
@@ -224,8 +225,8 @@ func (d *DACodecV2) NewDABatchFromBytes(data []byte) (DABatch, error) {
 		common.BytesToHash(data[daBatchV1OffsetBlobVersionedHash:daBatchV1OffsetParentBatchHash]),         // blobVersionedHash
 		common.BytesToHash(data[daBatchV1OffsetParentBatchHash:daBatchV1OffsetSkippedL1MessageBitmap]),    // parentBatchHash
 		data[daBatchV1OffsetSkippedL1MessageBitmap:],                                                      // skippedL1MessageBitmap
-		nil,                                                                                               // blob
-		nil,                                                                                               // z
+		nil, // blob
+		nil, // z
 	), nil
 }
 
