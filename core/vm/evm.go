@@ -45,6 +45,9 @@ type (
 )
 
 func (evm *EVM) precompile(addr common.Address) (PrecompiledContract, bool) {
+	if p, override := evm.precompileOverrides[addr]; override {
+		return p, p != nil
+	}
 	var precompiles map[common.Address]PrecompiledContract
 	switch {
 	case evm.chainRules.IsGalileo:
@@ -136,6 +139,8 @@ type EVM struct {
 	// available gas is calculated in gasCall* according to the 63/64 rule and later
 	// applied in opCall*.
 	callGasTemp uint64
+	// precompileOverrides is consulted before the fork's precompiles; see OverridePrecompiles.
+	precompileOverrides map[common.Address]PrecompiledContract
 }
 
 // NewEVM returns a new EVM. The returned EVM is not thread safe and should
@@ -174,6 +179,13 @@ func (evm *EVM) Cancelled() bool {
 // Interpreter returns the current interpreter
 func (evm *EVM) Interpreter() *EVMInterpreter {
 	return evm.interpreter
+}
+
+// OverridePrecompiles makes this EVM resolve each address in overrides to its
+// contract ahead of the fork's precompiles. A nil contract makes the address an
+// ordinary account. A later call replaces the previous overrides.
+func (evm *EVM) OverridePrecompiles(overrides map[common.Address]PrecompiledContract) {
+	evm.precompileOverrides = overrides
 }
 
 // Call executes the contract associated with the addr with the given input as
