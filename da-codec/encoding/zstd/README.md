@@ -19,9 +19,11 @@ We use `llvm-objcopy --redefine-sym` to rename the conflicting symbols in scroll
 
 The names are raw Mach-O names: a C name gets a leading `_` in Mach-O, the new names do not.
 
-The inputs are the `.backup` files. They hold the libraries after `add_symbol_prefix.sh` and before the rename. Keep them in the repo. `make fix-symbols` always makes the committed libraries from them, so the output is the same each time.
+The inputs are the `.backup` files. They hold the libraries after `add_symbol_prefix.sh` and before the rename. Keep them in the repo. `make fix-symbols` makes the committed libraries from them and never writes the `.backup` files. It stops if a `.backup` file is missing.
 
-We used `objconv` for this step before. It wrote broken archives: junk bytes in many member names, and member data that did not start on an 8-byte boundary. Apple's linker skips those members ("not 8-byte aligned"), and rustc refuses the names ("invalid utf-8"). `llvm-objcopy` writes clean archives.
+The committed libraries were made with `llvm-objcopy` from the rustup 1.96.0 `llvm-tools` component (LLVM 22.1.2). With that version, `make fix-symbols` gives the same bytes each time. Other LLVM versions may give different bytes.
+
+Do not use `objconv` for this step. It writes member names with junk bytes and can leave member data off the 8-byte boundary. Apple's linker skips those members ("not 8-byte aligned"), and rustc refuses the names ("invalid utf-8").
 
 ### Prerequisites
 
@@ -30,9 +32,11 @@ Install LLVM:
 brew install llvm
 ```
 
-The Makefile uses `/opt/homebrew/opt/llvm/bin/llvm-objcopy`, the same path as `add_symbol_prefix.sh`. To use another copy, give its path. For example, the copy in a rustup toolchain that has the `llvm-tools` component:
+The Makefile uses `/opt/homebrew/opt/llvm/bin/llvm-objcopy` and `/opt/homebrew/opt/llvm/bin/llvm-nm`, the same paths as `add_symbol_prefix.sh`. To use other copies, give their paths. For example, the copies in a rustup toolchain that has the `llvm-tools` component:
 ```bash
-make fix-symbols LLVM_OBJCOPY=$HOME/.rustup/toolchains/<toolchain>/lib/rustlib/aarch64-apple-darwin/bin/llvm-objcopy
+make fix-symbols \
+  LLVM_OBJCOPY=$HOME/.rustup/toolchains/<toolchain>/lib/rustlib/aarch64-apple-darwin/bin/llvm-objcopy \
+  LLVM_NM=$HOME/.rustup/toolchains/<toolchain>/lib/rustlib/aarch64-apple-darwin/bin/llvm-nm
 ```
 
 ### Manual Process
